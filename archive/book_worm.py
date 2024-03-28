@@ -6,7 +6,7 @@ from langchain.embeddings import HuggingFaceEmbeddings
 from langchain.docstore.document import Document
 
 from book_worm_chains import fetch_summarizing_chain
-from utils import degree_centrality_scores
+from lexrank import degree_centrality_scores
 
 MODEL_PATH = "models/firefly-llama2-7b-chat.Q5_K_M.gguf"
 EMBEDDING_MODEL_PATH = "all-mpnet-base-v2"
