@@ -14,5 +14,13 @@ def get_summarization_prompt(text_to_summarize: str):
     message_with_schema = f'{message}{SummaryAnswerFormat.schema_json()}'
     return {"prompt": get_prompt(message_with_schema), "output_schema": SummaryAnswerFormat.schema()}
 
+
 def get_prompt(message: str, system_prompt: str = DEFAULT_SYSTEM_PROMPT) -> str:
     return f'<s>[INST] <<SYS>>\n{system_prompt}\n<</SYS>>\n\n{message} [/INST]'
+
+
+def get_question_prompt(question, context):
+    system_prompt = "Please ensure that your responses only use the provided CONTEXT."
+    message = f"Given the following CONTEXT: {context} \nAnswer the QUESTION: {question}"
+    prompt_template = f'<s>[INST] <<SYS>>\n{system_prompt}\n<</SYS>>\n\n{message} [/INST]'
+    return prompt_template
