@@ -20,4 +20,7 @@ def get_prompt(message: str, system_prompt: str = DEFAULT_SYSTEM_PROMPT) -> str:
 
 
 def get_question_prompt(question, context):
-    return f"Answer the question {question} given the following text: {context}"
+    system_prompt = "Please ensure that your responses only use the provided CONTEXT."
+    message = f"Given the following CONTEXT: {context} \nAnswer the QUESTION: {question}"
+    prompt_template = f'<s>[INST] <<SYS>>\n{system_prompt}\n<</SYS>>\n\n{message} [/INST]'
+    return prompt_template

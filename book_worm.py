@@ -9,16 +9,16 @@ from llama_cpp import Llama, LogitsProcessorList
 from lmformatenforcer import CharacterLevelParser, JsonSchemaParser
 from lmformatenforcer.integrations.llamacpp import build_llamacpp_logits_processor, build_token_enforcer_tokenizer_data
 
+from src.query_module import Query
 from src.utils.lexrank import degree_centrality_scores
-from src.utils.prompts import get_summarization_prompt, get_question_prompt
+from src.utils.prompts import get_summarization_prompt
 
-from langchain.embeddings import HuggingFaceEmbeddings
-from langchain_community.document_loaders import TextLoader
 from langchain_text_splitters import CharacterTextSplitter
 from langchain_community.vectorstores import Chroma
 
+from src.utils.utils import llamacpp_with_character_level_parser
 
-SENTENCE_TRANSFORMERS_HOME="./models/embeddings"
+SENTENCE_TRANSFORMERS_HOME = "./models/embeddings"
 MODEL_PATH = "models/llama-2-13b-chat.Q2_K.gguf"
 EMBEDDING_MODEL_PATH = "all-mpnet-base-v2"
 
@@ -43,7 +43,6 @@ class BookWorm:
 
         self.token_enforcer = build_token_enforcer_tokenizer_data(self.model)
 
-
     def get_central_sentences(self, text, k=10):
         # Split the document into sentences
         sentences = [x.text for x in self.nlp(text).sents]
@@ -64,18 +63,16 @@ class BookWorm:
         sentences = [sentences[idx].strip() for idx in most_central_sentence_indices[:k]]
         return sentences
 
-
     def summarize_sentences(self, sentences):
-        text_to_summarize = " ".join(sentences[:4]) # TODO: find a better way to manage max_token limitation
+        text_to_summarize = " ".join(sentences[:4])  # TODO: find a better way to manage max_token limitation
         summarization_prompt = get_summarization_prompt(text_to_summarize)
 
-        output = self._llamacpp_with_character_level_parser(
-            summarization_prompt["prompt"],
+        output = llamacpp_with_character_level_parser(
+            summarization_prompt["prompt"], self.model, self.token_enforcer,
             JsonSchemaParser(summarization_prompt["output_schema"])
         )
 
         return json.loads(output)
-
 
     def extract_authors(self, text):
         authors = []
@@ -86,7 +83,6 @@ class BookWorm:
                 authors.append(chunk.text)
         return authors
 
-
     def extract_book_titles(text):
         titles = []
         text = "Tell me about 'Romeo and Juliet' by Shakespeare"
@@ -94,7 +90,6 @@ class BookWorm:
         for text_match in re.finditer(regex_str, text):
             titles.append(text_match.group())
         return titles
-
 
     def extract_genres(text):
         genres = []
@@ -104,39 +99,46 @@ class BookWorm:
                 genres.append(genre)
         return genres
 
-
-    def _llamacpp_with_character_level_parser(self, prompt: str, character_level_parser: Optional[CharacterLevelParser]) -> str:
+    def _llamacpp_with_character_level_parser(self, prompt: str,
+                                              character_level_parser: Optional[CharacterLevelParser]) -> str:
         logits_processors: Optional[LogitsProcessorList] = None
         if character_level_parser:
-            logits_processors = LogitsProcessorList([build_llamacpp_logits_processor(self.token_enforcer, character_level_parser)])
+            logits_processors = LogitsProcessorList(
+                [build_llamacpp_logits_processor(self.token_enforcer, character_level_parser)])
 
         output = self.model(prompt, temperature=0.0, logits_processor=logits_processors, max_tokens=1024)
         text: str = output['choices'][0]['text']
         return text
 
-    def query_book(self, question):
-        embedding_model = HuggingFaceEmbeddings(
-            model_name=EMBEDDING_MODEL_PATH,
-            cache_folder=SENTENCE_TRANSFORMERS_HOME
-        )
-        raw_documents = TextLoader('books/MarcusAurelius.txt').load()
-        text_splitter = CharacterTextSplitter(chunk_size=1000, chunk_overlap=0)
-        documents = text_splitter.split_documents(raw_documents)
+    @staticmethod
+    def get_relevant_content(documents, embedding_model, question, chunk_size):
+        text_splitter = CharacterTextSplitter(separator=".", chunk_size=1000, chunk_overlap=0)
+        documents = text_splitter.split_documents(documents)
         db = Chroma.from_documents(documents, embedding_model)
-
         docs = db.similarity_search(question)
         page_contents = [doc.page_content for doc in docs]
-        prompt = get_question_prompt(question, page_contents[0])
-        result = self.model(prompt, temperature=0.0, max_tokens=1024)
-        print(result)
+        return page_contents
 
 
 if __name__ == "__main__":
     from src.utils.chapterize import parse_document_in_chapters
 
     book_worm = BookWorm()
+    query = Query(book_worm.model, book_worm.token_enforcer)
 
-    book_worm.query_book("When was Marcus Aurelius born?")
+    result = query.query_book('data/MarcusAurelius.txt', 'When was Marcus Aurelius born?')
+    print(result)
+
+    result = query.query_book('data/MarcusAurelius.txt', 'When did Marcus Aurelius die?')
+    print(result)
+
+    # marcus_aurelius_location = 'data/MarcusAurelius.txt'
+    # gulliver_location = 'data/book1-txt.txt'
+    # result1 = book_worm.query_book(marcus_aurelius_location, 'When was Marcus Aurelius born?')
+    # print(result1)
+    # result2 = book_worm.query_book(gulliver_location, 'What happens in the country of Liliput?')
+    # print(result2)
+
     # data = open("data/book1-txt.txt", "r").read()
     # chapters = parse_document_in_chapters(data)
 
