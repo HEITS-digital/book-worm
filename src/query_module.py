@@ -5,7 +5,7 @@ from langchain_community.embeddings.huggingface import HuggingFaceEmbeddings
 from langchain_community.vectorstores.chroma import Chroma
 from langchain_text_splitters import CharacterTextSplitter
 from lmformatenforcer import JsonSchemaParser
-from transformers import pipeline
+from transformers import pipeline, AutoTokenizer
 
 from src.utils.prompts import get_question_prompt, SummaryAnswerFormat
 from src.utils.utils import llamacpp_with_character_level_parser
