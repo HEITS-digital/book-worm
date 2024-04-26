@@ -1,6 +1,10 @@
-import gradio as gr
 import time
+import gradio as gr
+
+from chat import Chat
 from itertools import chain
+
+chat = Chat()
 
 
 def echo(message, history):
@@ -9,17 +13,18 @@ def echo(message, history):
         time.sleep(0.05)
         yield response[: i+1]
 
-def i_am_a_bot():
-    time.sleep(1)
-    response = "Oh ... here's the book"
-    for i in range(len(response)):
-        time.sleep(0.05)
-        yield response[: i+1]
+
+def i_am_a_bot(message):
+    response = chat.parse_message(message)
+    print(response)
+    yield response
+
 
 def chainer(message, history):
-    generator3 = chain(echo(message, history), i_am_a_bot())
+    generator3 = chain(echo(message, history), i_am_a_bot(message))
     for i in generator3:
         yield i
+
 
 demo = gr.ChatInterface(
     chainer,
@@ -28,14 +33,14 @@ demo = gr.ChatInterface(
     title="Book Worm",
     description="Your AI librarian for classical literature",
     examples=[
-        "Do you know the book Guliver's Travels?", 
+        "Do you know the book Guliver's Travels?",
         "What was the name of the first island that Guliver got to?"
     ],
-    cache_examples=True,
+    cache_examples=False,
     retry_btn=None,
     undo_btn="Delete Previous",
     clear_btn="Clear",
 )
 
 if __name__ == "__main__":
-    demo.launch(share=True)
+    demo.launch(share=False)
