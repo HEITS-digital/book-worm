@@ -4,30 +4,35 @@ import gradio as gr
 from chat import Chat
 from itertools import chain
 
-chat = Chat()
 
+# def echo(message, history):
+#     response = f"Hmmm ... let me look in the library for that ..."
+#     for i in range(len(response)):
+#         time.sleep(0.02)
+#         yield response[: i+1]
+
+
+# def i_am_a_bot(message):
+#     response = chat.parse_message(message)
+#     yield response
+
+
+# def chainer(message, history):
+#     generator3 = chain(echo(message, history), i_am_a_bot(message))
+#     for i in generator3:
+#         yield i
 
 def echo(message, history):
-    response = f"I'm just repeating what you're typing\n Your message: {message}.\n"
+    # need to find a better way to instantiate this, BC it cannot be declared globally :(
+    chat = Chat()
+    response = chat.parse_message(message)
     for i in range(len(response)):
-        time.sleep(0.05)
+        time.sleep(0.02)
         yield response[: i+1]
 
 
-def i_am_a_bot(message):
-    response = chat.parse_message(message)
-    print(response)
-    yield response
-
-
-def chainer(message, history):
-    generator3 = chain(echo(message, history), i_am_a_bot(message))
-    for i in generator3:
-        yield i
-
-
 demo = gr.ChatInterface(
-    chainer,
+    echo,
     chatbot=gr.Chatbot(height=300),
     textbox=gr.Textbox(placeholder="Ask me about a book", container=False, scale=7),
     title="Book Worm",
