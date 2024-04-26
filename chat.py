@@ -26,7 +26,6 @@ handles_dict = [
     {"name": "search for a book, play or poem", "handler": search_book},
     {"name": "search for an author, writer or person", "handler": search_author},
     {"name": "search for a genre", "handler": search_genre},
-    {"name": "suggest genre", "handler": suggest_genre},
     {"name": "more information", "handler": more_information},
 ]
 
@@ -40,7 +39,7 @@ class Chat:
     def parse_message(self, message):
         queries_embeddings = np.array(self.bookworm.embedding_model.encode(message))
         similarity = np.dot(queries_embeddings, self.genres_embeddings.T)
-        index = np.argsort(-similarity)[0]
+        index = np.argmax(similarity)
 
         return handles_dict[index]["handler"](message)
 
