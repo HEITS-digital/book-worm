@@ -7,12 +7,14 @@ from scripts.gutenberg import Gutenberg
 class BookUtils:
     def __init__(self):
         self.guten = Gutenberg()
-    
+        self.user_id = "my-user" # replace this with a UUID
+        self.last_msessage = None
+        self.last_user_response = None
 
-    def search_author(self, author):
+    def search_author(self, message):
         relevant_books = []
 
-        for book_meta in self.guten.search(f"language:en AND author: {author}"):
+        for book_meta in self.guten.search(f"language:en AND author: {message}"):
             if "Index" in book_meta['title'][0]:
                 continue
 
@@ -26,21 +28,24 @@ class BookUtils:
             # this info will be used to answer questions about the book
             book_info = {
                 "is_available": True,
-                "more_details": True,
                 "title": book_meta['title'],
-                "authors": author,
+                "authors": message,
                 "description": description,
-                "genre": book_meta.get("subject", "UNKNOWN")
+                "genre": book_meta.get("subject", "UNKNOWN"),
+                "bookworm_key": book_meta.get("key", None)
             }        
 
             relevant_books.append(book_info)
+        
+        self.last_message = message
+        self.last_user_response = relevant_books
         return relevant_books    
         
 
-    def search_genre(self, genre, top_k=3):
+    def search_genre(self, message, top_k=3):
         relevant_books = []
 
-        generator = self.guten.search(f"language:en AND subject: {genre}")
+        generator = self.guten.search(f"language:en AND subject: {message}")
         books_of_genre = [next(generator) for _ in range(top_k)]
         
         for book_meta in books_of_genre:
@@ -57,19 +62,25 @@ class BookUtils:
             # this info will be used to answer questions about the book
             book_info = {
                 "is_available": True,
-                "more_details": True,
                 "title": book_meta['title'],
                 "authors": book_meta['author'],
                 "description": description,
-                "genre": book_meta.get("subject", "UNKNOWN")
+                "genre": book_meta.get("subject", "UNKNOWN"),
+                "bookworm_key": book_meta.get("key", None)
             }        
 
             relevant_books.append(book_info)
+
+        self.last_message = message
+        self.last_user_response = relevant_books
         return relevant_books    
 
 
-    def search_book(self, message):
-        relevant_books = []
+    def search_book_on_bookworm(self, message):
+        relevant_books = {
+            "on_bookworm": [],
+            "not_on_bookworm": []
+        }
 
         # search for books (need descriptions) using google API
         data = self._query_google_books(message)
@@ -83,26 +94,40 @@ class BookUtils:
             
             is_in_library = False
             genre = item.get("categories", "UNKNOWN")
+            bookworm_key = None
             # if we have no information about the book in the DB we skip it
             if len(book_meta) > 0:
                 book_meta = book_meta[0]
                 if "Index" not in book_meta['title'][0]:
                     is_in_library = True
-                    book_meta.get("subject", genre)
+                    genre = book_meta.get("subject", genre)
+                    bookworm_key = book_meta.get("key", bookworm_key)
                 
             # this info will be used to answer questions about the book
             book_info = {
-                "is_available": is_in_library,
-                "more_details": is_in_library,
                 "title": title,
                 "authors": main_author,
                 "description": item.get("description", ""),
-                "genre": genre
+                "genre": genre,
+                "bookworm_key": bookworm_key
             }
 
-            relevant_books.append(book_info)
+            if is_in_library:
+                relevant_books["on_bookworm"].append(book_info)
+            else:
+                relevant_books["not_on_bookworm"].append(book_info)
 
-        return relevant_books
+        self.last_message = message
+        self.last_user_response = relevant_books
+        return relevant_books["on_bookworm"]
+    
+
+    def search_book_on_google(self, message):
+        if self.last_message == message:
+            return self.last_user_response
+        
+        self.search_book_on_bookworm(message)
+        return self.last_user_response
 
 
     def _query_google_books(self, message):
