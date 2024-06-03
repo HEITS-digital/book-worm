@@ -5,8 +5,10 @@ from dotenv import dotenv_values
 from langchain import hub
 from langchain.prompts import SystemMessagePromptTemplate
 from langchain_openai import OpenAIEmbeddings, ChatOpenAI
+from langchain.memory import ChatMessageHistory
 from langchain.pydantic_v1 import BaseModel, Field
 from langchain.agents import create_openai_tools_agent, AgentExecutor
+from langchain_core.runnables.history import RunnableWithMessageHistory
 from langchain.tools import tool
 
 from scripts.book_utils import BookUtils
@@ -34,7 +36,7 @@ class SearchGenreInput(BaseModel):
     book_genre: str = Field(description="should be a book genre to search for")
 
 class GetDetailsInput(BaseModel):
-    book_key: str = Field(description="should be the identification key for a book")
+    bookworm_key: str = Field(description="should be the identification key for a book in the BookWorm library")
     query: str = Field(description="should be a search query for information inside the book")
 
 @tool("get-genres-tool", return_direct=False)
@@ -63,26 +65,45 @@ def search_book_on_google(query: str) -> List[dict]:
     return butils.search_book_on_google(query)
 
 @tool("get-book-details-tool", args_schema=GetDetailsInput, return_direct=False)
-def get_book_details(book_key: str, query: str) -> str:
+def get_book_details(bookworm_key: str, query: str) -> str:
     """Look up for information inside a book from the BookWorm library."""
     return butils.load_book_as_documents(query)
 # %%
 tools = [get_genres, search_book_on_bookworm, search_book_on_google, search_author, search_genre]
 
 prompt = hub.pull("hwchase17/openai-functions-agent")
-sys_message = SystemMessagePromptTemplate.from_template("You are a librarian in the BookWorm library. You are not able to give more information about a book outside the library, except the description.")
+sys_message = SystemMessagePromptTemplate.from_template("You are a librarian in the BookWorm library. If a book is not in the library you can only offer a short description.")
 prompt.messages[0] = sys_message
 
 agent = create_openai_tools_agent(llm, tools, prompt)
+memory = ChatMessageHistory(session_id="test-session")
 
 agent_executor = AgentExecutor(agent=agent, tools=tools, verbose=True)
+
+agent_with_chat_history = RunnableWithMessageHistory(
+    agent_executor,
+    # This is needed because in most real world scenarios, a session id is needed
+    # It isn't really used here because we are using a simple in memory ChatMessageHistory
+    lambda session_id: memory,
+    input_messages_key="input",
+    history_messages_key="chat_history",
+)
 # %%
-agent_executor.invoke({"input": "I'm thinking of a book about some speaking animals that deals with political motives. Do you know it?"})
-# agent_executor.invoke({"input": "I like science-fiction. Can you recommend any good books?"})
- # %%
-agent_executor.invoke({"input": "Do have any book on the count of monte somethin something?"})
+agent_with_chat_history.invoke(
+    {"input": "I'm thinking of a book about some speaking animals that deals with political motives. Do you know it?"}, 
+    config={"configurable": {"session_id": "<foo>"}}
+)
+# %%
+agent_with_chat_history.invoke(
+    {"input": "Do you have any books on the count of monte something something?"}, 
+    config={"configurable": {"session_id": "<foo>"}}
+)
+# %%
+agent_with_chat_history.invoke(
+    {"input": "What was the last thing I asked you?"},
+    config={"configurable": {"session_id": "<foo>"}}
+)
 # %%
 """TODO
 1. can ask questions about the contents of a book
-2. has memory of past conversations
 """
