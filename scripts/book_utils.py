@@ -17,12 +17,13 @@ class BookUtils:
         self.user_id = "my-user" # replace this with a UUID
         self.last_book = None
         self.last_msessage = None
-        self.last_user_response = None
+        self.last_user_response = dict()
 
 
-    def get_relevant_text(self, bookworm_key, query):
-        if bookworm_key != self.last_book:
-            book_text = self.get_book_by_id(bookworm_key)
+    def get_relevant_text(self, book_name, query):
+        if book_name != self.last_book:
+            bookworm_key = self.get_book_id_by_name(book_name)
+            book_text = self.get_book_contents_by_id(bookworm_key)
             self.build_db_from_book_text(book_text)
             self.last_book = bookworm_key
 
@@ -43,14 +44,28 @@ class BookUtils:
         self.vector_db = Chroma.from_documents(documents, self.encoder)
 
 
-    def get_book_by_id(self, bookworm_key):
+    def get_book_contents_by_id(self, bookworm_key):
         self.guten.download(bookworm_key)
         book_text = next(self.guten.text(bookworm_key))
         return book_text
 
+    def get_book_id_by_name(self, book_name):
+        for book in self.last_user_response.get("on_bookworm", []):
+            if book["title"] == book_name:
+                return book["bookworm_key"]
+        
+        self.search_book_on_bookworm(book_name)
+
+        for book in self.last_user_response.get("on_bookworm", []):
+            if book["title"] == book_name:
+                return book["bookworm_key"]
+
 
     def search_author(self, message):
-        relevant_books = []
+        relevant_books = {
+            "on_bookworm": [],
+            "not_on_bookworm": []
+        }
 
         for book_meta in self.guten.search(f"language:en AND author: {message}"):
             if "Index" in book_meta['title'][0]:
@@ -73,7 +88,7 @@ class BookUtils:
                 "bookworm_key": book_meta.get("key", None)
             }        
 
-            relevant_books.append(book_info)
+            relevant_books["on_bookworm"].append(book_info)
         
         self.last_message = message
         self.last_user_response = relevant_books
@@ -81,7 +96,10 @@ class BookUtils:
         
 
     def search_genre(self, message, top_k=3):
-        relevant_books = []
+        relevant_books = {
+            "on_bookworm": [],
+            "not_on_bookworm": []
+        }
 
         generator = self.guten.search(f"language:en AND subject: {message}")
         books_of_genre = [next(generator) for _ in range(top_k)]
@@ -107,7 +125,7 @@ class BookUtils:
                 "bookworm_key": book_meta.get("key", None)
             }        
 
-            relevant_books.append(book_info)
+            relevant_books["on_bookworm"].append(book_info)
 
         self.last_message = message
         self.last_user_response = relevant_books

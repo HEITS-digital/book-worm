@@ -23,7 +23,7 @@ def update_env_vars(env_file_path: str=None):
 llm = ChatOpenAI(model="gpt-3.5-turbo-0125")
 # %%
 butils = BookUtils()
-# result = butils.get_relevant_text("14969", "did he stab his father?")
+result = butils.get_relevant_text('Three Contributions to the Theory of Sex', "did he stab his father?")
 # %%
 class SearchAuthorInput(BaseModel):
     author_name: str = Field(description="should be the name of a person")
@@ -35,8 +35,8 @@ class SearchGenreInput(BaseModel):
     book_genre: str = Field(description="should be a book genre to search for")
 
 class GetDetailsInput(BaseModel):
-    bookworm_key: str = Field(description="should be the identification key for a book in the BookWorm library")
-    query: str = Field(description="should be a search query for information inside the book")
+    book_name: str = Field(description="the name of the book to get information from")
+    query: str = Field(description="what to search for inside the book")
 
 @tool("get-genres-tool", return_direct=False)
 def get_genres() -> List[str]:
@@ -64,9 +64,9 @@ def search_book_on_google(query: str) -> List[dict]:
     return butils.search_book_on_google(query)
 
 @tool("get-details-from-book-tool", args_schema=GetDetailsInput, return_direct=False)
-def get_details_from_book(bookworm_key: str, query: str) -> str:
+def get_details_from_book(book_name: str, query: str) -> str:
     """Look up for information inside a book from the BookWorm library."""
-    return butils.get_relevant_text(int(bookworm_key), query)
+    return butils.get_relevant_text(book_name, query)
 # %%
 tools = [get_genres, search_book_on_bookworm, search_book_on_google, search_author, search_genre, get_details_from_book]
 
@@ -99,7 +99,7 @@ agent_with_chat_history.invoke(
 )
 # %%
 agent_with_chat_history.invoke(
-    {"input": "What was the count's wife in the first book you gave me?"},
+    {"input": "What was the name of the count's wife?"},
     config={"configurable": {"session_id": "<foo>"}}
 )
 # %%
