@@ -33,7 +33,7 @@ genres_embeddings = np.array(bookworm.embedding_model.embed_documents(handles))
 similarity = np.dot(queries_embeddings, genres_embeddings.T)
 print(similarity)
 # %%
-from gutenberg import Gutenberg
+from scripts.gutenberg import Gutenberg
 # %%
 # Default database path.
 DB_PATH = "~/.gutenberg"

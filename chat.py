@@ -3,7 +3,7 @@ import requests
 
 import numpy as np
 
-from gutenberg import Gutenberg
+from scripts.gutenberg import Gutenberg
 from book_worm import BookWorm
 
 
