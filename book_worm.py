@@ -9,7 +9,6 @@ from llama_cpp import Llama, LogitsProcessorList
 from lmformatenforcer import CharacterLevelParser, JsonSchemaParser
 from lmformatenforcer.integrations.llamacpp import build_llamacpp_logits_processor, build_token_enforcer_tokenizer_data
 
-from src.query_module import Query
 from src.utils.lexrank import degree_centrality_scores
 from src.utils.prompts import get_summarization_prompt
 
@@ -74,31 +73,6 @@ class BookWorm:
 
         return json.loads(output)
 
-    def extract_authors(self, text):
-        authors = []
-        doc = self.nlp(text)
-        for chunk in doc.noun_chunks:
-            contains_entity = any([x.ent_type_ != "" for x in chunk])
-            if contains_entity:
-                authors.append(chunk.text)
-        return authors
-
-    def extract_book_titles(text):
-        titles = []
-        text = "Tell me about 'Romeo and Juliet' by Shakespeare"
-        regex_str = r"([\"'])(?:(?=(\\?))\2.)*?\1"
-        for text_match in re.finditer(regex_str, text):
-            titles.append(text_match.group())
-        return titles
-
-    def extract_genres(text):
-        genres = []
-        supported_genres = [x.strip().lower() for x in open("supported_genres.txt", "r").readlines()]
-        for genre in supported_genres:
-            if genre in text.lower():
-                genres.append(genre)
-        return genres
-
     def _llamacpp_with_character_level_parser(self, prompt: str,
                                               character_level_parser: Optional[CharacterLevelParser]) -> str:
         logits_processors: Optional[LogitsProcessorList] = None
@@ -118,39 +92,3 @@ class BookWorm:
         docs = db.similarity_search(question)
         page_contents = [doc.page_content for doc in docs]
         return page_contents
-
-
-if __name__ == "__main__":
-    from src.utils.chapterize import parse_document_in_chapters
-
-    book_worm = BookWorm()
-    query = Query(book_worm.model, book_worm.token_enforcer)
-
-    result = query.query_book('data/MarcusAurelius.txt', 'When was Marcus Aurelius born?')
-    print(result)
-
-    result = query.query_book('data/MarcusAurelius.txt', 'When did Marcus Aurelius die?')
-    print(result)
-
-    # marcus_aurelius_location = 'data/MarcusAurelius.txt'
-    # gulliver_location = 'data/book1-txt.txt'
-    # result1 = book_worm.query_book(marcus_aurelius_location, 'When was Marcus Aurelius born?')
-    # print(result1)
-    # result2 = book_worm.query_book(gulliver_location, 'What happens in the country of Liliput?')
-    # print(result2)
-
-    # data = open("data/book1-txt.txt", "r").read()
-    # chapters = parse_document_in_chapters(data)
-
-    # print(f"NB OF CHAPTERS: {len(chapters)}")
-    # print("#"*20)
-    #
-    # chapter_text = " ".join(chapters[20])
-    # top_sentences = book_worm.get_central_sentences(chapter_text)
-    # print("~~~TOP SENTENCES~~~")
-    # print("\n".join(top_sentences))
-    # print("#"*20)
-    #
-    # output = book_worm.summarize_sentences(top_sentences)
-    # print("~~~OUTPUT~~~")
-    # print(output)
