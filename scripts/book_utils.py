@@ -1,15 +1,53 @@
 import json
 import requests
 
+from langchain_openai import OpenAIEmbeddings
+from langchain_text_splitters import RecursiveCharacterTextSplitter
+from langchain_community.vectorstores import Chroma
+
 from scripts.gutenberg import Gutenberg
 
 
 class BookUtils:
     def __init__(self):
+        self.encoder = OpenAIEmbeddings()
         self.guten = Gutenberg()
+        self.vector_db = None
+
         self.user_id = "my-user" # replace this with a UUID
+        self.last_book = None
         self.last_msessage = None
         self.last_user_response = None
+
+
+    def get_relevant_text(self, bookworm_key, query):
+        if bookworm_key != self.last_book:
+            book_text = self.get_book_by_id(bookworm_key)
+            self.build_db_from_book_text(book_text)
+            self.last_book = bookworm_key
+
+        docs = self.vector_db.similarity_search(query)
+        page_contents = [doc.page_content for doc in docs]
+        return page_contents
+
+
+    def build_db_from_book_text(self, book_text):
+        text_splitter = RecursiveCharacterTextSplitter(
+            # Set a really small chunk size, just to show.
+            chunk_size=512,
+            chunk_overlap=20,
+            length_function=len,
+            is_separator_regex=False,
+        )
+        documents = text_splitter.create_documents([book_text])
+        self.vector_db = Chroma.from_documents(documents, self.encoder)
+
+
+    def get_book_by_id(self, bookworm_key):
+        self.guten.download(bookworm_key)
+        book_text = next(self.guten.text(bookworm_key))
+        return book_text
+
 
     def search_author(self, message):
         relevant_books = []

@@ -4,7 +4,7 @@ from dotenv import dotenv_values
 
 from langchain import hub
 from langchain.prompts import SystemMessagePromptTemplate
-from langchain_openai import OpenAIEmbeddings, ChatOpenAI
+from langchain_openai import ChatOpenAI
 from langchain.memory import ChatMessageHistory
 from langchain.pydantic_v1 import BaseModel, Field
 from langchain.agents import create_openai_tools_agent, AgentExecutor
@@ -20,11 +20,10 @@ def update_env_vars(env_file_path: str=None):
         env_config = dotenv_values(env_file_path)
         os.environ = {**os.environ, **env_config}
 # %%
-encoder = OpenAIEmbeddings()
 llm = ChatOpenAI(model="gpt-3.5-turbo-0125")
 # %%
 butils = BookUtils()
-result = butils.search_book_on_bookworm("meditations aurelius")
+# result = butils.get_relevant_text("14969", "did he stab his father?")
 # %%
 class SearchAuthorInput(BaseModel):
     author_name: str = Field(description="should be the name of a person")
@@ -64,12 +63,12 @@ def search_book_on_google(query: str) -> List[dict]:
     """Used for looking up books that are not in the BookWorm library. No additional information can be provided about these books."""
     return butils.search_book_on_google(query)
 
-@tool("get-book-details-tool", args_schema=GetDetailsInput, return_direct=False)
-def get_book_details(bookworm_key: str, query: str) -> str:
+@tool("get-details-from-book-tool", args_schema=GetDetailsInput, return_direct=False)
+def get_details_from_book(bookworm_key: str, query: str) -> str:
     """Look up for information inside a book from the BookWorm library."""
-    return butils.load_book_as_documents(query)
+    return butils.get_relevant_text(int(bookworm_key), query)
 # %%
-tools = [get_genres, search_book_on_bookworm, search_book_on_google, search_author, search_genre]
+tools = [get_genres, search_book_on_bookworm, search_book_on_google, search_author, search_genre, get_details_from_book]
 
 prompt = hub.pull("hwchase17/openai-functions-agent")
 sys_message = SystemMessagePromptTemplate.from_template("You are a librarian in the BookWorm library. If a book is not in the library you can only offer a short description.")
@@ -100,7 +99,7 @@ agent_with_chat_history.invoke(
 )
 # %%
 agent_with_chat_history.invoke(
-    {"input": "What was the last thing I asked you?"},
+    {"input": "What was the count's wife in the first book you gave me?"},
     config={"configurable": {"session_id": "<foo>"}}
 )
 # %%
