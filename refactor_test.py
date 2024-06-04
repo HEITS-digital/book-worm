@@ -23,7 +23,6 @@ def update_env_vars(env_file_path: str=None):
 llm = ChatOpenAI(model="gpt-3.5-turbo-0125")
 # %%
 butils = BookUtils()
-result = butils.get_relevant_text('Three Contributions to the Theory of Sex', "did he stab his father?")
 # %%
 class SearchAuthorInput(BaseModel):
     author_name: str = Field(description="should be the name of a person")
