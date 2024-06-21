@@ -20,8 +20,8 @@ class BookUtils:
         self.last_user_response = dict()
 
     def get_relevant_text(self, book_name, query):
-        if book_name != self.last_book:
-            bookworm_key = self.get_book_id_by_name(book_name)
+        bookworm_key = self.get_book_id_by_name(book_name)
+        if bookworm_key != self.last_book:
             book_text = self.get_book_contents_by_id(bookworm_key)
             self.vector_db = self.get_db_from_book_text(book_text, 1024)
             self.last_book = bookworm_key
