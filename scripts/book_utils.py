@@ -28,7 +28,7 @@ class BookUtils:
 
         docs = self.vector_db.similarity_search(query)
 
-        small_chunks_vector_db = self.get_db_from_book_text(docs, 2056)
+        small_chunks_vector_db = self.get_db_from_book_text(docs, 256)
         docs = small_chunks_vector_db.similarity_search(query)
 
         page_contents = [doc.page_content for doc in docs]
