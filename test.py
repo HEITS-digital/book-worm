@@ -2,7 +2,7 @@
 import json
 import requests
 
-from gutenberg import Gutenberg
+from scripts.gutenberg import Gutenberg
 
 
 DB_PATH = "~/.gutenberg"
