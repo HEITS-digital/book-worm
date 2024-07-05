@@ -1,8 +1,12 @@
+import uuid
 import time
+
 import gradio as gr
 
 from bookwom import BookWorm
 
+
+session_workaround = {}
 
 # def echo(message, history):
 #     response = f"Hmmm ... let me look in the library for that ..."
@@ -33,11 +37,15 @@ def update_env_vars(env_file_path: str = None):
 
 if __name__ == "__main__":
     update_env_vars(".env")
+    session_id = str(uuid.uuid4())
 
-    def echo(message, history):
+    def echo(message, history, session_id):
         # need to find a better way to instantiate this, BC it cannot be declared globally :(
-        chat = BookWorm()
-        response = chat.ask_bookworm(message)
+        chat = session_workaround.get(session_id, None)
+        if chat is None:
+            chat = BookWorm()
+            session_workaround[session_id] = chat
+        response = chat.ask_bookworm(message, session_id)
         output = response["output"]
         for i in range(len(output)):
             time.sleep(0.02)
@@ -49,9 +57,12 @@ if __name__ == "__main__":
         textbox=gr.Textbox(placeholder="Ask me about a book", container=False, scale=7),
         title="Book Worm",
         description="Your AI librarian for classical literature",
+        additional_inputs=[
+            gr.Textbox(session_id, label="Session ID"),
+        ],
         examples=[
-            "Do you know the book Guliver's Travels?",
-            "What was the name of the first island that Guliver got to?",
+            ["Do you know the book Guliver's Travels?", session_id],
+            ["What was the name of the first island that Guliver got to?", session_id],
         ],
         cache_examples=False,
         retry_btn=None,
@@ -59,4 +70,4 @@ if __name__ == "__main__":
         clear_btn="Clear",
     )
 
-    demo.launch(share=False)
+    demo.launch(share=True)
