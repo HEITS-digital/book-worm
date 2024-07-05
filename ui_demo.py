@@ -3,7 +3,7 @@ import time
 
 import gradio as gr
 
-from bookwom import BookWorm
+from book_worm import BookWorm
 
 
 session_workaround = {}
