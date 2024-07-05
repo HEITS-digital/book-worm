@@ -33,7 +33,7 @@ class BookUtils:
             )
         except ValueError:
             book_text = self.get_book_contents_by_id(bookworm_key)
-            documents = self.get_db_from_book_text(book_text, 1024)
+            documents = self.split_documents(book_text, 2048)
             vector_db = Redis.from_texts(
                 [document.page_content for document in documents],
                 self.encoder,
@@ -42,16 +42,17 @@ class BookUtils:
             )
             vector_db.write_schema(self.redis_schema)
 
-        docs = vector_db.similarity_search(query)
+        search_result = vector_db.similarity_search(query)
 
-        documents = self.get_db_from_book_text(docs, 256)
+        documents = self.split_documents(search_result, 256)
         small_chunks_vector_db = Chroma.from_documents(documents, self.encoder)
-        docs = small_chunks_vector_db.similarity_search(query)
+        search_result = small_chunks_vector_db.similarity_search(query)
 
-        page_contents = [doc.page_content for doc in docs]
+        page_contents = [doc.page_content for doc in search_result]
         return page_contents
 
-    def get_db_from_book_text(self, book_text, chunk_size):
+    @staticmethod
+    def split_documents(book_text, chunk_size):
         text_splitter = RecursiveCharacterTextSplitter(
             chunk_size=chunk_size,
             chunk_overlap=20,
