@@ -3,6 +3,7 @@ import requests
 
 from langchain_openai import OpenAIEmbeddings
 from langchain_text_splitters import RecursiveCharacterTextSplitter
+from langchain_community.vectorstores.redis import Redis
 from langchain_community.vectorstores import Chroma
 
 from scripts.gutenberg import Gutenberg
@@ -12,29 +13,46 @@ class BookUtils:
     def __init__(self):
         self.encoder = OpenAIEmbeddings()
         self.guten = Gutenberg()
-        self.vector_db = None
 
         self.user_id = "my-user"  # replace this with a UUID
         self.last_book = None
         self.last_message = None
         self.last_user_response = dict()
+        self.redis_url = "redis://localhost:6380"
+        self.redis_schema = "redis_schema.yaml"
 
     def get_relevant_text(self, book_name, query):
         bookworm_key = self.get_book_id_by_name(book_name)
-        if bookworm_key != self.last_book:
+
+        try:
+            vector_db = Redis.from_existing_index(
+                self.encoder,
+                index_name=bookworm_key,
+                redis_url=self.redis_url,
+                schema=self.redis_schema,
+            )
+        except ValueError:
             book_text = self.get_book_contents_by_id(bookworm_key)
-            self.vector_db = self.get_db_from_book_text(book_text, 1024)
-            self.last_book = bookworm_key
+            documents = self.split_documents(book_text, 2048)
+            vector_db = Redis.from_texts(
+                [document.page_content for document in documents],
+                self.encoder,
+                redis_url=self.redis_url,
+                index_name=bookworm_key
+            )
+            vector_db.write_schema(self.redis_schema)
 
-        docs = self.vector_db.similarity_search(query)
+        search_result = vector_db.similarity_search(query)
 
-        small_chunks_vector_db = self.get_db_from_book_text(docs, 256)
-        docs = small_chunks_vector_db.similarity_search(query)
+        documents = self.split_documents(search_result, 256)
+        small_chunks_vector_db = Chroma.from_documents(documents, self.encoder)
+        search_result = small_chunks_vector_db.similarity_search(query)
 
-        page_contents = [doc.page_content for doc in docs]
+        page_contents = [doc.page_content for doc in search_result]
         return page_contents
 
-    def get_db_from_book_text(self, book_text, chunk_size):
+    @staticmethod
+    def split_documents(book_text, chunk_size):
         text_splitter = RecursiveCharacterTextSplitter(
             chunk_size=chunk_size,
             chunk_overlap=20,
@@ -46,7 +64,7 @@ class BookUtils:
         else:
             documents = text_splitter.split_documents(book_text)
 
-        return Chroma.from_documents(documents, self.encoder)
+        return documents
 
     def get_book_contents_by_id(self, bookworm_key):
         self.guten.download(bookworm_key)
