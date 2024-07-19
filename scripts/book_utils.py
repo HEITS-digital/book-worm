@@ -18,7 +18,7 @@ class BookUtils:
         self.last_book = None
         self.last_message = None
         self.last_user_response = dict()
-        self.redis_url = "redis://localhost:6380"
+        self.redis_url = "redis://localhost:6379"
         self.redis_schema = "redis_schema.yaml"
 
     def get_relevant_text(self, book_name, query):
@@ -38,7 +38,7 @@ class BookUtils:
                 [document.page_content for document in documents],
                 self.encoder,
                 redis_url=self.redis_url,
-                index_name=bookworm_key
+                index_name=bookworm_key,
             )
             vector_db.write_schema(self.redis_schema)
 

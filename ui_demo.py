@@ -6,26 +6,6 @@ import gradio as gr
 from book_worm import BookWorm
 
 
-session_workaround = {}
-
-# def echo(message, history):
-#     response = f"Hmmm ... let me look in the library for that ..."
-#     for i in range(len(response)):
-#         time.sleep(0.02)
-#         yield response[: i+1]
-
-
-# def i_am_a_bot(message):
-#     response = chat.parse_message(message)
-#     yield response
-
-
-# def chainer(message, history):
-#     generator3 = chain(echo(message, history), i_am_a_bot(message))
-#     for i in generator3:
-#         yield i
-
-
 def update_env_vars(env_file_path: str = None):
     import os
     from dotenv import dotenv_values
@@ -41,11 +21,8 @@ if __name__ == "__main__":
 
     def echo(message, history, session_id):
         # need to find a better way to instantiate this, BC it cannot be declared globally :(
-        chat = session_workaround.get(session_id, None)
-        if chat is None:
-            chat = BookWorm()
-            session_workaround[session_id] = chat
-        response = chat.ask_bookworm(message, session_id)
+        chat = BookWorm()
+        response = chat.ask_bookworm(message, history)
         output = response["output"]
         for i in range(len(output)):
             time.sleep(0.02)
@@ -68,6 +45,7 @@ if __name__ == "__main__":
         retry_btn=None,
         undo_btn="Delete Previous",
         clear_btn="Clear",
+        concurrency_limit=10,
     )
 
-    demo.launch(share=True)
+    demo.launch(share=True, max_threads=40)
