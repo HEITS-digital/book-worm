@@ -1,61 +1,74 @@
 # %%
-from langchain import hub
+from book_worm import BookWorm
 
-prompt = hub.pull("hwchase17/openai-functions-agent")
+bookworm = BookWorm()
 # %%
-from langchain.memory import ConversationBufferMemory
-
-memory = ConversationBufferMemory()
-memory.save_context({"input": "hi"}, {"output": "whats up"})
-memory.save_context({"input": "not much"}, {"output": "that's good"})
-# %%
-from langchain_core.messages.base import messages_to_dict
-from langchain_core.messages.utils import messages_from_dict
-
-formatted_history = messages_to_dict(memory.chat_memory.messages)
-
-# %%
-messages_from_dict(formatted_history)
-
-
-# %%
-def _format_history(messages):
-    return [
-        {
-            "type": "human",
-            "data": {
-                "content": messages[0],
-                "additional_kwargs": {},
-                "response_metadata": {},
-                "type": "human",
-                "name": None,
-                "id": None,
-                "example": False,
-            },
-        },
-        {
-            "type": "ai",
-            "data": {
-                "content": messages[1],
-                "additional_kwargs": {},
-                "response_metadata": {},
-                "type": "ai",
-                "name": None,
-                "id": None,
-                "example": False,
-                "tool_calls": [],
-                "invalid_tool_calls": [],
-                "usage_metadata": None,
-            },
-        },
-    ]
-
-
-# %%
-history = [["test1", "test2"], ["test3", "test4"]]
-formatted_history = [
-    entry for messages in history for entry in _format_history(messages)
+user_queries = [
+    "I want to read a book about Nostradamus and how he invented the light",
+    "Do you know the author Elena Ferrante?",
+    "Tell me about 'Romeo and Juliet' by Shakespeare",
+    "Do you know any books written by Joules Verne",
+    "I want to read about a thriller",
+    "The Catcher in the Rye was a wonderful book. Could you suggest a similar one?",
+    "Can you go into more details?",
+    "What genres do you have?",
 ]
-list_of_messages = messages_from_dict(formatted_history)
+handles = [
+    "search for a book, play or poem",
+    "search for an author, writer or person",
+    "search for a genre",
+    "suggest genre",
+    "more information",
+]
+
+
 # %%
-ConversationBufferMemory(memory_key="chat_history", chat_memory=list_of_messages)
+import numpy as np
+
+queries_embeddings = np.array(bookworm.embedding_model.embed_documents(user_queries))
+genres_embeddings = np.array(bookworm.embedding_model.embed_documents(handles))
+# %%
+
+
+similarity = np.dot(queries_embeddings, genres_embeddings.T)
+print(similarity)
+# %%
+from scripts.gutenberg import Gutenberg
+
+# %%
+# Default database path.
+DB_PATH = "~/.gutenberg"
+
+# Default number of worker processes for parallel downloads.
+DOWNLOAD_POOL_SIZE = 4
+
+# Where to find the Gutenberg catalog. Must be the address of the bz2 file, not
+# the zip file.
+CATALOG_URL = "http://www.gutenberg.org/cache/epub/feeds/rdf-files.tar.bz2"
+
+# Where to find the list of Gutenberg mirrors.
+MIRRORS_URL = "https://www.gutenberg.org/MIRRORS.ALL"
+
+guten = Gutenberg()
+# %%
+subjects = {}
+# "author", "title", "language"
+for rez in guten.search("language:en"):
+    for subj in rez["subject"]:
+        if subj not in subjects:
+            subjects[subj] = 0
+        subjects[subj] += 1
+
+subjects = {
+    k: v for k, v in sorted(subjects.items(), key=lambda item: item[1], reverse=True)
+}
+
+top_100_subjects = []
+for key in subjects:
+    if key != key.upper():
+        top_100_subjects.append(key)
+    if len(top_100_subjects) == 100:
+        break
+
+open("supported_genres.txt", "w").write("\n".join(top_100_subjects))
+# %%
