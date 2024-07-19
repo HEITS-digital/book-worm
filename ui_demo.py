@@ -21,8 +21,8 @@ if __name__ == "__main__":
 
     def echo(message, history, session_id):
         # need to find a better way to instantiate this, BC it cannot be declared globally :(
-        chat = BookWorm()
-        response = chat.ask_bookworm(message, history)
+        chat = BookWorm(history)
+        response = chat.ask_bookworm(message)
         output = response["output"]
         for i in range(len(output)):
             time.sleep(0.02)

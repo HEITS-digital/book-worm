@@ -18,7 +18,7 @@ class BookUtils:
         self.last_book = None
         self.last_message = None
         self.last_user_response = dict()
-        self.redis_url = "redis://localhost:6379"
+        self.redis_url = "redis://localhost:6380"
         self.redis_schema = "redis_schema.yaml"
 
     def get_relevant_text(self, book_name, query):
