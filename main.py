@@ -6,19 +6,19 @@ bookworm = BookWorm()
 user_queries = [
     "I want to read a book about Nostradamus and how he invented the light",
     "Do you know the author Elena Ferrante?",
-    "Tell me about 'Romeo and Juliet' by Shakespeare", 
-    "Do you know any books written by Joules Verne", 
+    "Tell me about 'Romeo and Juliet' by Shakespeare",
+    "Do you know any books written by Joules Verne",
     "I want to read about a thriller",
     "The Catcher in the Rye was a wonderful book. Could you suggest a similar one?",
     "Can you go into more details?",
-    "What genres do you have?"
+    "What genres do you have?",
 ]
 handles = [
     "search for a book, play or poem",
     "search for an author, writer or person",
     "search for a genre",
     "suggest genre",
-    "more information"
+    "more information",
 ]
 
 
@@ -34,6 +34,7 @@ similarity = np.dot(queries_embeddings, genres_embeddings.T)
 print(similarity)
 # %%
 from scripts.gutenberg import Gutenberg
+
 # %%
 # Default database path.
 DB_PATH = "~/.gutenberg"
@@ -58,7 +59,9 @@ for rez in guten.search("language:en"):
             subjects[subj] = 0
         subjects[subj] += 1
 
-subjects = {k: v for k, v in sorted(subjects.items(), key=lambda item: item[1], reverse=True)}
+subjects = {
+    k: v for k, v in sorted(subjects.items(), key=lambda item: item[1], reverse=True)
+}
 
 top_100_subjects = []
 for key in subjects:
@@ -67,5 +70,5 @@ for key in subjects:
     if len(top_100_subjects) == 100:
         break
 
-open("supported_genres.txt", 'w').write("\n".join(top_100_subjects))
+open("supported_genres.txt", "w").write("\n".join(top_100_subjects))
 # %%

@@ -1,9 +1,9 @@
 from langchain import hub
 from langchain_openai import ChatOpenAI
-from langchain.memory import ChatMessageHistory
+from langchain.memory import ChatMessageHistory, ConversationBufferMemory
 from langchain.prompts import SystemMessagePromptTemplate
-from langchain_core.runnables.history import RunnableWithMessageHistory
 from langchain.agents import create_openai_tools_agent, AgentExecutor
+from langchain_core.messages.utils import messages_from_dict
 
 from scripts.book_utils import BookUtils
 from scripts.bookworm_tools import (
@@ -17,7 +17,7 @@ from scripts.bookworm_tools import (
 
 
 class BookWorm:
-    def __init__(self):
+    def __init__(self, history=list()):
         self.butils = BookUtils()
 
         self.llm = ChatOpenAI(model="gpt-3.5-turbo-0125")
@@ -26,18 +26,64 @@ class BookWorm:
 
         base_agent = create_openai_tools_agent(self.llm, self.tools, self.prompt)
 
-        memory = ChatMessageHistory()
+        if len(history) > 0:
+            memory = self._get_memory_from_history(history)
+        else:
+            memory = ConversationBufferMemory(
+                memory_key="chat_history", return_messages=True
+            )
 
-        agent_executor = AgentExecutor(agent=base_agent, tools=self.tools, verbose=True)
-
-        self.agent = RunnableWithMessageHistory(
-            agent_executor,
-            # This is needed because in most real world scenarios, a session id is needed
-            # It isn't really used here because we are using a simple in memory ChatMessageHistory
-            lambda session_id: memory,
-            input_messages_key="input",
-            history_messages_key="chat_history",
+        self.agent = AgentExecutor(
+            agent=base_agent,
+            tools=self.tools,
+            verbose=True,
+            handle_parsing_errors=True,
+            memory=memory,
+            max_iterations=100,
         )
+
+    def _get_memory_from_history(self, history):
+        formatted_history = [
+            entry for messages in history for entry in self._format_history(messages)
+        ]
+        list_of_messages = messages_from_dict(formatted_history)
+        retrieved_chat_history = ChatMessageHistory(messages=list_of_messages)
+        return ConversationBufferMemory(
+            memory_key="chat_history",
+            chat_memory=retrieved_chat_history,
+            return_messages=True,
+        )
+
+    def _format_history(self, messages):
+        return [
+            {
+                "type": "human",
+                "data": {
+                    "content": messages[0],
+                    "additional_kwargs": {},
+                    "response_metadata": {},
+                    "type": "human",
+                    "name": None,
+                    "id": None,
+                    "example": False,
+                },
+            },
+            {
+                "type": "ai",
+                "data": {
+                    "content": messages[1],
+                    "additional_kwargs": {},
+                    "response_metadata": {},
+                    "type": "ai",
+                    "name": None,
+                    "id": None,
+                    "example": False,
+                    "tool_calls": [],
+                    "invalid_tool_calls": [],
+                    "usage_metadata": None,
+                },
+            },
+        ]
 
     def _get_bookworm_tools(self):
         return [
@@ -57,11 +103,8 @@ class BookWorm:
         prompt.messages[0] = sys_message
         return prompt
 
-    def ask_bookworm(self, question, session_id):
-        response = self.agent.invoke(
-            {"input": question},
-            config={"configurable": {"session_id": session_id}},
-        )
+    def ask_bookworm(self, question):
+        response = self.agent.invoke({"input": question})
         return response
 
 
@@ -75,9 +118,18 @@ def update_env_vars(env_file_path: str = None):
 
 
 if __name__ == "__main__":
-    update_env_vars(".env")
-    book_worm = BookWorm()
+    chat_history = []
 
-    book_worm.ask_bookworm(
-        "I am looking for a book from Robert Louis Stevenson. Do you know any?"
-    )
+    update_env_vars(".env")
+
+    for query in [
+        "Do you have the book called: The Wrecker?",
+        "What did I just ask you?",
+        "What is The Wrecker about?",
+        "What is the name of the main character in The Wrecker?",
+    ]:
+        book_worm = BookWorm(chat_history)
+        response = book_worm.ask_bookworm(query)
+        print(response)
+        print(response["output"])
+        chat_history.append([response["input"], response["output"]])

@@ -38,7 +38,7 @@ class BookUtils:
                 [document.page_content for document in documents],
                 self.encoder,
                 redis_url=self.redis_url,
-                index_name=bookworm_key
+                index_name=bookworm_key,
             )
             vector_db.write_schema(self.redis_schema)
 
