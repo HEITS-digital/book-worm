@@ -20,7 +20,7 @@ class BookWorm:
     def __init__(self, history=list()):
         self.butils = BookUtils()
 
-        self.llm = ChatOpenAI(model="gpt-3.5-turbo-0125")
+        self.llm = ChatOpenAI(model="gpt-4o")
         self.tools = self._get_bookworm_tools()
         self.prompt = self._get_bookoworm_prompt()
 

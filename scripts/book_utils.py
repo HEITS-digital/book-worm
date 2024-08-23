@@ -98,6 +98,8 @@ class BookUtils:
             description = ""
             if len(data) > 0:
                 description = data[0].get("description")
+            bookworm_key = book_meta.get("key", None)
+            online_book_url = self._get_gutenberg_url(bookworm_key) if bookworm_key else ""
 
             # this info will be used to answer questions about the book
             book_info = {
@@ -106,7 +108,8 @@ class BookUtils:
                 "authors": message,
                 "description": description,
                 "genre": book_meta.get("subject", "UNKNOWN"),
-                "bookworm_key": book_meta.get("key", None),
+                "bookworm_key": bookworm_key,
+                "online_book_url": online_book_url
             }
 
             relevant_books["on_bookworm"].append(book_info)
@@ -135,6 +138,8 @@ class BookUtils:
             description = ""
             if len(data) > 0:
                 description = data[0].get("description")
+            bookworm_key = book_meta.get("key", None)
+            online_book_url = self._get_gutenberg_url(bookworm_key) if bookworm_key else ""
 
             # this info will be used to answer questions about the book
             book_info = {
@@ -143,7 +148,8 @@ class BookUtils:
                 "authors": book_meta["author"],
                 "description": description,
                 "genre": book_meta.get("subject", "UNKNOWN"),
-                "bookworm_key": book_meta.get("key", None),
+                "bookworm_key": bookworm_key,
+                "online_book_url": online_book_url,
             }
 
             relevant_books["on_bookworm"].append(book_info)
@@ -179,6 +185,7 @@ class BookUtils:
                     is_in_library = True
                     genre = book_meta.get("subject", genre)
                     bookworm_key = book_meta.get("key", bookworm_key)
+            online_book_url = self._get_gutenberg_url(bookworm_key) if bookworm_key else ""
 
             # this info will be used to answer questions about the book
             book_info = {
@@ -187,6 +194,7 @@ class BookUtils:
                 "description": item.get("description", ""),
                 "genre": genre,
                 "bookworm_key": bookworm_key,
+                "online_book_url": online_book_url,
             }
 
             if is_in_library:
@@ -229,3 +237,7 @@ class BookUtils:
 
             filtered_data.append(volume_info)
         return filtered_data
+
+    @staticmethod
+    def _get_gutenberg_url(bookworm_key):
+        return f"https://www.gutenberg.org/cache/epub/{bookworm_key}/pg{bookworm_key}-images.html"
