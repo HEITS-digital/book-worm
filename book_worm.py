@@ -1,3 +1,4 @@
+import logging
 from langchain import hub
 from langchain_openai import ChatOpenAI
 from langchain.memory import ChatMessageHistory, ConversationBufferMemory
@@ -15,9 +16,16 @@ from scripts.bookworm_tools import (
     GetDetailsFromBook,
 )
 
+logging.basicConfig(
+    filename='bookworm.log',  # Log file path
+    level=logging.INFO,  # Log level: DEBUG, INFO, WARNING, ERROR, CRITICAL
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',  # Log format
+)
+
 
 class BookWorm:
     def __init__(self, history=list()):
+        logging.info("Initializing BookWorm class.")
         self.butils = BookUtils()
 
         self.llm = ChatOpenAI(model="gpt-3.5-turbo-0125")
@@ -41,18 +49,25 @@ class BookWorm:
             memory=memory,
             max_iterations=100,
         )
+        logging.info("BookWorm class initialized successfully.")
 
     def _get_memory_from_history(self, history):
-        formatted_history = [
-            entry for messages in history for entry in self._format_history(messages)
-        ]
-        list_of_messages = messages_from_dict(formatted_history)
-        retrieved_chat_history = ChatMessageHistory(messages=list_of_messages)
-        return ConversationBufferMemory(
-            memory_key="chat_history",
-            chat_memory=retrieved_chat_history,
-            return_messages=True,
-        )
+        try:
+            formatted_history = [
+                entry for messages in history for entry in self._format_history(messages)
+            ]
+            list_of_messages = messages_from_dict(formatted_history)
+            retrieved_chat_history = ChatMessageHistory(messages=list_of_messages)
+            logging.info("Memory retrieved successfully.")
+
+            return ConversationBufferMemory(
+                memory_key="chat_history",
+                chat_memory=retrieved_chat_history,
+                return_messages=True,
+            )
+        except Exception as e:
+            logging.error(f"Error in _get_memory_from_history: {e}")
+            raise
 
     def _format_history(self, messages):
         return [
@@ -86,22 +101,30 @@ class BookWorm:
         ]
 
     def _get_bookworm_tools(self):
-        return [
-            GetGenresTool(),
-            SearchAuthorTool(metadata={"butils": self.butils}),
-            SearchGenreTool(metadata={"butils": self.butils}),
-            SearchBookOnBookwormTool(metadata={"butils": self.butils}),
-            SearchBookOnGoogleTool(metadata={"butils": self.butils}),
-            GetDetailsFromBook(metadata={"butils": self.butils}),
-        ]
+        try:
+            return [
+                GetGenresTool(),
+                SearchAuthorTool(metadata={"butils": self.butils}),
+                SearchGenreTool(metadata={"butils": self.butils}),
+                SearchBookOnBookwormTool(metadata={"butils": self.butils}),
+                SearchBookOnGoogleTool(metadata={"butils": self.butils}),
+                GetDetailsFromBook(metadata={"butils": self.butils}),
+            ]
+        except Exception as e:
+            logging.error(f"Error in _get_bookworm_tools: {e}")
+            raise
 
     def _get_bookoworm_prompt(self):
-        prompt = hub.pull("hwchase17/openai-functions-agent")
-        sys_message = SystemMessagePromptTemplate.from_template(
-            "You are a librarian in the BookWorm library. If a book is not in the library you can only offer a short description."
-        )
-        prompt.messages[0] = sys_message
-        return prompt
+        try:
+            prompt = hub.pull("hwchase17/openai-functions-agent")
+            sys_message = SystemMessagePromptTemplate.from_template(
+                "You are a librarian in the BookWorm library. If a book is not in the library you can only offer a short description."
+            )
+            prompt.messages[0] = sys_message
+            return prompt
+        except Exception as e:
+            logging.error(f"Error in _get_bookoworm_prompt: {e}")
+            raise
 
     def ask_bookworm(self, question):
         response = self.agent.invoke({"input": question})
