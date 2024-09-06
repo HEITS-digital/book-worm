@@ -32,8 +32,11 @@ if __name__ == "__main__":
         title="Book Worm",
         description="Your AI librarian for classical literature",
         examples=[
-            ["Do you know the book Guliver's Travels?"],
-            ["What was the name of the first island that Guliver got to?"],
+            ["What would be a good book about pirates and adventure?"],
+            ["I started reading a lot of Jonathan Swift lately. Can you recommend any similar authors?"],
+            ["Are there any books by Mark Twain in bookworm?"],
+            ["""Is there any horse in "A Horse's Tale" by Mark Twain?"""],
+            ["""Who is Buffalo Bill from "A Horse's Tale" by Mark Twain?"""]
         ],
         cache_examples=False,
         retry_btn=None,

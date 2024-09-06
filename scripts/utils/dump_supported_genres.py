@@ -1,3 +1,5 @@
+from scripts.gutenberg import Gutenberg
+
 # Default database path.
 DB_PATH = "~/.gutenberg"
 
