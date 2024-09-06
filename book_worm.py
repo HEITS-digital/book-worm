@@ -130,6 +130,10 @@ class BookWorm:
         response = self.agent.invoke({"input": question})
         return response
 
+    @staticmethod
+    def log_report(history):
+        logging.info(f"Log reported by user: {history}")
+
 
 def update_env_vars(env_file_path: str = None):
     import os
