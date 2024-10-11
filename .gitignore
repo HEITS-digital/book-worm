@@ -3,3 +3,8 @@ __pycache__
 
 .venv
 model*/
+
+.env
+
+.gutenberg
+db.sqlite3
