@@ -19,8 +19,8 @@ def gutenberg_connection(func):
 
 
 @gutenberg_connection
-def get_book_meta_by_title_author(guten, title, author, top_k=1):
-    result = guten.search(f"language:en AND title:{title} AND author: {author}")
+def get_book_meta_by_title_author(gutten, title, author, top_k=1):
+    result = gutten.search(f"language:en AND title:{title} AND author: {author}")
     return list(result)[:top_k]
 
 
@@ -33,7 +33,7 @@ def get_book_contents_by_id(gutten, bookworm_key):
 
 @gutenberg_connection
 def search_author(guten, message, top_k=3):
-    relevant_books = {"on_bookworm": [], "not_on_bookworm": []}
+    relevant_books = {"in_database": [], "not_in_database": []}
 
     search_result = guten.search(f"language:en AND author: {message}")
 
@@ -62,7 +62,7 @@ def search_author(guten, message, top_k=3):
             "online_book_url": online_book_url,
         }
 
-        relevant_books["on_bookworm"].append(book_info)
+        relevant_books["in_database"].append(book_info)
         found_books += 1
 
         if found_books == top_k:
@@ -72,7 +72,7 @@ def search_author(guten, message, top_k=3):
 
 
 def search_book(query):
-    relevant_books = {"on_bookworm": [], "not_on_bookworm": []}
+    relevant_books = {"in_database": [], "not_in_database": []}
 
     # search for books (need descriptions) using google API
     data = query_google_books(query)
@@ -107,21 +107,21 @@ def search_book(query):
         }
 
         if is_in_library:
-            relevant_books["on_bookworm"].append(book_info)
+            relevant_books["in_database"].append(book_info)
         else:
-            relevant_books["not_on_bookworm"].append(book_info)
+            relevant_books["not_in_database"].append(book_info)
 
     return relevant_books
 
 
 def get_book_id_by_title(title, last_user_response=dict()):
-    for book in last_user_response.get("on_bookworm", []):
+    for book in last_user_response.get("in_database", []):
         if book["title"] == title:
             return {"id": book["bookworm_key"]}
 
     response = search_book(title)
 
-    for book in response.get("on_bookworm", []):
+    for book in response.get("in_database", []):
         if book.get("title", "") == title:
             return {"id": book["bookworm_key"]}
 

@@ -1,5 +1,21 @@
 from django.http import JsonResponse
-from .services.services import get_book_contents_by_id, get_book_meta_by_title_author, get_book_id_by_title, search_book
+from .services.services import (
+    get_book_contents_by_id,
+    get_book_meta_by_title_author,
+    get_book_id_by_title,
+    search_book,
+    search_author,
+)
+
+
+def get_author_by_query(request):
+    if request.method == "GET":
+        query = request.GET.get("query", None)
+        if not query:
+            return JsonResponse({"error": "Invalid input: 'query' is required."}, status=400)
+
+    data = search_author(query)
+    return JsonResponse(data, safe=False)  # Return data as JSON response
 
 
 def get_book_by_query(request):
