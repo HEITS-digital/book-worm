@@ -55,7 +55,7 @@ from string import ascii_uppercase
 from email.utils import parsedate
 
 # Default database path.
-DB_PATH = "~/.gutenberg"
+DB_PATH = ".gutenberg"
 
 # Default number of worker processes for parallel downloads.
 DOWNLOAD_POOL_SIZE = 4
@@ -706,7 +706,7 @@ class Gutenberg(object):
         self.path = os.path.expandvars(os.path.expanduser(path))
         self.catalog_url = catalog_url
         self.num_workers = num_workers
-        self.conn = sqlite3.connect(self.path)
+        self.conn = sqlite3.connect(self.path, check_same_thread=False)
         cur = self.conn.cursor()
         cur.executescript(SCHEMA)
         if not cur.execute(

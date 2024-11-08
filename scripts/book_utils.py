@@ -109,7 +109,7 @@ class BookUtils:
                 "description": description,
                 "genre": book_meta.get("subject", "UNKNOWN"),
                 "bookworm_key": bookworm_key,
-                "online_book_url": online_book_url
+                "online_book_url": online_book_url,
             }
 
             relevant_books["on_bookworm"].append(book_info)
@@ -169,11 +169,7 @@ class BookUtils:
             main_author = item.get("authors", [""])[0]
 
             # check if we have that book in our database
-            book_meta = list(
-                self.guten.search(
-                    f"language:en AND title:{title} AND author: {main_author}"
-                )
-            )
+            book_meta = list(self.guten.search(f"language:en AND title:{title} AND author: {main_author}"))
 
             is_in_library = False
             genre = item.get("categories", "UNKNOWN")
