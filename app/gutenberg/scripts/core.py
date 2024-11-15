@@ -71,6 +71,42 @@ def search_author(guten, message, top_k=3):
     return relevant_books
 
 
+@gutenberg_connection
+def search_genre(guten, message, top_k=3):
+    relevant_books = {"on_bookworm": [], "not_on_bookworm": []}
+
+    generator = guten.search(f"language:en AND subject: {message}")
+    books_of_genre = [next(generator) for _ in range(top_k)]
+
+    for book_meta in books_of_genre:
+        if "Index" in book_meta["title"][0]:
+            continue
+
+        # search for books (need descriptions) using google API
+        data = query_google_books(book_meta["title"])
+
+        description = ""
+        if len(data) > 0:
+            description = data[0].get("description")
+        bookworm_key = book_meta.get("key", None)
+        online_book_url = get_gutenberg_url(bookworm_key) if bookworm_key else ""
+
+        # this info will be used to answer questions about the book
+        book_info = {
+            "is_available": True,
+            "title": book_meta["title"],
+            "authors": book_meta["author"],
+            "description": description,
+            "genre": book_meta.get("subject", "UNKNOWN"),
+            "bookworm_key": bookworm_key,
+            "online_book_url": online_book_url,
+        }
+
+        relevant_books["on_bookworm"].append(book_info)
+
+    return relevant_books
+
+
 def search_book(query):
     relevant_books = {"in_database": [], "not_in_database": []}
 
