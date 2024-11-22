@@ -9,11 +9,12 @@ agent_pool = AgentPool()
 def ask_bookworm(request):
     if request.method == "POST":
         message = request.POST.get("message", None)
+        history = request.POST.get("history", list())
         if not message:
             return JsonResponse({"error": "Invalid input: 'message' is required."}, status=400)
 
         agent = agent_pool.acquire()
-        data = agent.ask_bookworm(message)
+        data = agent.ask_bookworm(message, history)
         agent_pool.release(agent)
 
         return JsonResponse({"answer": data["output"]}, safe=False)  # Return data as JSON response

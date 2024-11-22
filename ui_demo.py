@@ -1,7 +1,7 @@
 import time
 import gradio as gr
 
-from book_worm import BookWorm
+import requests
 
 
 def update_env_vars(env_file_path: str = None):
@@ -18,9 +18,14 @@ if __name__ == "__main__":
 
     def echo(message, history):
         # need to find a better way to instantiate this, BC it cannot be declared globally :(
-        chat = BookWorm(history)
-        response = chat.ask_bookworm(message)
-        output = response["output"]
+        response = requests.post(
+            "http://127.0.0.1:8000/api/bookworm/ask-bookworm/",
+            {
+                "message": message,
+                "history": history,
+            },
+        )
+        output = response.json().get("answer", "Due to a internal error I am not able to answer. Please try again.")
         for i in range(len(output)):
             time.sleep(0.02)
             yield output[: i + 1]
@@ -36,12 +41,9 @@ if __name__ == "__main__":
             ["I started reading a lot of Jonathan Swift lately. Can you recommend any similar authors?"],
             ["Are there any books by Mark Twain in bookworm?"],
             ["""Is there any horse in "A Horse's Tale" by Mark Twain?"""],
-            ["""Who is Buffalo Bill from "A Horse's Tale" by Mark Twain?"""]
+            ["""Who is Buffalo Bill from "A Horse's Tale" by Mark Twain?"""],
         ],
         cache_examples=False,
-        retry_btn=None,
-        undo_btn="Delete Previous",
-        clear_btn="Clear",
         concurrency_limit=10,
     )
 
