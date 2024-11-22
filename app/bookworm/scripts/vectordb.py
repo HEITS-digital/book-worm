@@ -1,3 +1,4 @@
+import os
 import json
 import requests
 
@@ -7,12 +8,14 @@ from langchain_community.vectorstores.redis import Redis
 from langchain_community.vectorstores import Chroma
 
 
-class BookUtils:
+class VectorDB:
     def __init__(self, gutenberg_api):
         self.gutenberg_api = gutenberg_api
         self.encoder = OpenAIEmbeddings()
         self.redis_url = "redis://localhost:6380"
-        self.redis_schema = "redis_schema.yaml"
+
+        current_path = os.path.dirname(__file__)
+        self.redis_schema = os.path.join(current_path, "static/redis_schema.yaml")
 
     # TODO: replace book_name with book_id
     def get_relevant_text(self, book_name, query):
@@ -47,11 +50,13 @@ class BookUtils:
 
     def get_book_id_by_name(self, book_name):
         api_url = f"{self.gutenberg_api}/get-id-by-title/"
-        return requests.get(api_url, {"title": book_name})
+        response = requests.get(api_url, {"title": book_name})
+        return response.json().get("id", -1)
 
     def get_book_contents_by_id(self, book_id):
-        api_url = f"{self.gutenberg_api}/get-book-contents-by-id/"
-        return requests.get(api_url, {"book_id": book_id})
+        api_url = f"{self.gutenberg_api}/get-contents-by-id/"
+        response = requests.get(api_url, {"book_id": book_id})
+        return response.text
 
     @staticmethod
     def split_documents(book_text, chunk_size):

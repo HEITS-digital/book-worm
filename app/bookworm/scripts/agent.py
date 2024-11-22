@@ -12,12 +12,14 @@ from .tools import (
     SearchBookOnBookwormTool,
     GetDetailsFromBook,
 )
+from .vectordb import VectorDB
 
 
 class Agent:
-    def __init_(self):
-        self.gutenberg_api = "127.0.0.1:8000/api/gutenberg"
+    def __init__(self):
+        self.gutenberg_api = "http://127.0.0.1:8000/api/gutenberg"
         self.llm = ChatOpenAI(model="gpt-4o")
+        self.vector_db = VectorDB(gutenberg_api=self.gutenberg_api)
         self.tools = self._get_bookworm_tools()
         self.prompt = self._get_bookoworm_prompt()
         self.base_agent = create_openai_tools_agent(self.llm, self.tools, self.prompt)
@@ -46,7 +48,7 @@ class Agent:
             SearchAuthorTool(metadata={"api_url": f"{self.gutenberg_api}/get-author-by-query/"}),
             SearchGenreTool(metadata={"api_url": f"{self.gutenberg_api}/get-genre-by-query/"}),
             SearchBookOnBookwormTool(metadata={"api_url": f"{self.gutenberg_api}/get-book-by-query/"}),
-            GetDetailsFromBook(metadata={"butils": self.butils}),
+            GetDetailsFromBook(metadata={"vector_db": self.vector_db}),
         ]
 
     def _get_bookoworm_prompt(self):

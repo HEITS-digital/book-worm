@@ -46,3 +46,5 @@ Start Server
 ```
 python manage.py runserver
 ```
+
+docker run --name my-redis -p 6380:6379 -d redis/redis-stack:latest

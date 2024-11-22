@@ -41,6 +41,7 @@ INSTALLED_APPS = [
     "django_filters",  # Used with DRF
     "rest_framework",  # DRF package
     "gutenberg",
+    "bookworm",
 ]
 
 MIDDLEWARE = [
@@ -141,8 +142,6 @@ REST_FRAMEWORK = {
         "rest_framework.filters.SearchFilter",
     ),
     "SEARCH_PARAM": "filter[search]",
-    "TEST_REQUEST_RENDERER_CLASSES": (
-        "rest_framework_json_api.renderers.JSONRenderer",
-    ),
+    "TEST_REQUEST_RENDERER_CLASSES": ("rest_framework_json_api.renderers.JSONRenderer",),
     "TEST_REQUEST_DEFAULT_FORMAT": "vnd.api+json",
 }

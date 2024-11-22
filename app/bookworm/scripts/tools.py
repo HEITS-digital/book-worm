@@ -1,6 +1,7 @@
+import os
 import requests
 
-from langchain.pydantic_v1 import BaseModel, Field
+from pydantic import BaseModel, Field
 from langchain_core.callbacks.manager import (
     CallbackManagerForToolRun,
     AsyncCallbackManagerForToolRun,
@@ -28,13 +29,15 @@ class GetDetailsInput(BaseModel):
 
 
 class GetGenresTool(BaseTool):
-    name = "get-genres-tool"
-    description = "Returns the list of genres for books available in the BookWorm library."
-    return_direct = False
+    name: str = "get-genres-tool"
+    description: str = "Returns the list of genres for books available in the BookWorm library."
+    return_direct: bool = False
 
     def _run(self, run_manager: Optional[CallbackManagerForToolRun] = None) -> List[str]:
         # External variable return when tool runs
-        return open("supported_genres.txt", "r").readlines()
+        current_path = os.path.dirname(__file__)
+        supported_genres_path = os.path.join(current_path, "static/supported_genres.txt")
+        return open(supported_genres_path, "r").readlines()
 
     async def _arun(
         self,
@@ -45,14 +48,15 @@ class GetGenresTool(BaseTool):
 
 
 class SearchAuthorTool(BaseTool):
-    name = "search-author-tool"
-    description = "Look up books by author in the BookWorm library"
-    return_direct = False
+    name: str = "search-author-tool"
+    description: str = "Look up books by author in the BookWorm library"
+    return_direct: bool = False
     args_schema: Type[BaseModel] = SearchAuthorInput
 
     def _run(self, author_name: str, run_manager: Optional[CallbackManagerForToolRun] = None) -> List[dict]:
         # External variable return when tool runs
-        return requests.get(self.metadata["api_url"], {"query": author_name})
+        response = requests.get(self.metadata["api_url"], {"query": author_name})
+        return response.text
 
     async def _arun(
         self,
@@ -64,14 +68,15 @@ class SearchAuthorTool(BaseTool):
 
 
 class SearchGenreTool(BaseTool):
-    name = "search-genre-tool"
-    description = "Look up books from a specific genre in the BookWorm library."
-    return_direct = False
+    name: str = "search-genre-tool"
+    description: str = "Look up books from a specific genre in the BookWorm library."
+    return_direct: bool = False
     args_schema: Type[BaseModel] = SearchGenreInput
 
     def _run(self, book_genre: str, run_manager: Optional[CallbackManagerForToolRun] = None) -> List[dict]:
         # External variable return when tool runs
-        return requests.get(self.metadata["api_url"], {"query": book_genre})
+        response = requests.get(self.metadata["api_url"], {"query": book_genre})
+        return response.text
 
     async def _arun(
         self,
@@ -83,14 +88,15 @@ class SearchGenreTool(BaseTool):
 
 
 class SearchBookOnBookwormTool(BaseTool):
-    name = "search-book-on-bookworm-tool"
-    description = "Look up books in the BookWorm library. This is preferred when searching using query."
-    return_direct = False
+    name: str = "search-book-on-bookworm-tool"
+    description: str = "Look up books in the BookWorm library. This is preferred when searching using query."
+    return_direct: bool = False
     args_schema: Type[BaseModel] = SearchBookInput
 
     def _run(self, query: str, run_manager: Optional[CallbackManagerForToolRun] = None) -> List[dict]:
         # External variable return when tool runs
-        return requests.get(self.metadata["api_url"], {"query": query})
+        response = requests.get(self.metadata["api_url"], {"query": query})
+        return response.text
 
     async def _arun(
         self,
@@ -102,9 +108,9 @@ class SearchBookOnBookwormTool(BaseTool):
 
 
 class GetDetailsFromBook(BaseTool):
-    name = "get-details-from-book-tool"
-    description = "Look up for information inside a book from the BookWorm library."
-    return_direct = False
+    name: str = "get-details-from-book-tool"
+    description: str = "Look up for information inside a book from the BookWorm library."
+    return_direct: bool = False
     args_schema: Type[BaseModel] = GetDetailsInput
 
     def _run(
@@ -114,7 +120,7 @@ class GetDetailsFromBook(BaseTool):
         run_manager: Optional[CallbackManagerForToolRun] = None,
     ) -> List[dict]:
         # External variable return when tool runs
-        return self.metadata["butils"].get_relevant_text(book_name, query)
+        return self.metadata["vector_db"].get_relevant_text(book_name, query)
 
     async def _arun(
         self,

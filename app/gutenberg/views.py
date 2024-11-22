@@ -15,8 +15,8 @@ def get_author_by_query(request):
         if not query:
             return JsonResponse({"error": "Invalid input: 'query' is required."}, status=400)
 
-    data = search_author(query)
-    return JsonResponse(data, safe=False)  # Return data as JSON response
+        data = search_author(query)
+        return JsonResponse(data, safe=False)  # Return data as JSON response
 
 
 def get_genre_by_query(request):
@@ -25,8 +25,8 @@ def get_genre_by_query(request):
         if not query:
             return JsonResponse({"error": "Invalid input: 'query' is required."}, status=400)
 
-    data = search_genre(query)
-    return JsonResponse(data, safe=False)  # Return data as JSON response
+        data = search_genre(query)
+        return JsonResponse(data, safe=False)  # Return data as JSON response
 
 
 def get_book_by_query(request):
@@ -35,8 +35,8 @@ def get_book_by_query(request):
         if not query:
             return JsonResponse({"error": "Invalid input: 'query' is required."}, status=400)
 
-    data = search_book(query)
-    return JsonResponse(data, safe=False)  # Return data as JSON response
+        data = search_book(query)
+        return JsonResponse(data, safe=False)  # Return data as JSON response
 
 
 def get_contents_by_id(request):
