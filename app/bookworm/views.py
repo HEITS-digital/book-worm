@@ -1,3 +1,4 @@
+import json
 from django.http import JsonResponse
 from django.middleware.csrf import get_token
 from .scripts.agent_pool import AgentPool
@@ -9,7 +10,8 @@ agent_pool = AgentPool()
 def ask_bookworm(request):
     if request.method == "POST":
         message = request.POST.get("message", None)
-        history = request.POST.get("history", list())
+        history = request.POST.get("history", "[]")
+        history = json.loads(history)
         if not message:
             return JsonResponse({"error": "Invalid input: 'message' is required."}, status=400)
 
