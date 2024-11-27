@@ -60,42 +60,10 @@ class Agent:
         return prompt
 
     def _get_memory_from_history(self, history):
-        formatted_history = [entry for messages in history for entry in self._format_history(messages)]
-        list_of_messages = messages_from_dict(formatted_history)
+        list_of_messages = messages_from_dict(history)
         retrieved_chat_history = ChatMessageHistory(messages=list_of_messages)
         return ConversationBufferMemory(
             memory_key="chat_history",
             chat_memory=retrieved_chat_history,
             return_messages=True,
         )
-
-    def _format_history(self, messages):
-        return [
-            {
-                "type": "human",
-                "data": {
-                    "content": messages[0],
-                    "additional_kwargs": {},
-                    "response_metadata": {},
-                    "type": "human",
-                    "name": None,
-                    "id": None,
-                    "example": False,
-                },
-            },
-            {
-                "type": "ai",
-                "data": {
-                    "content": messages[1],
-                    "additional_kwargs": {},
-                    "response_metadata": {},
-                    "type": "ai",
-                    "name": None,
-                    "id": None,
-                    "example": False,
-                    "tool_calls": [],
-                    "invalid_tool_calls": [],
-                    "usage_metadata": None,
-                },
-            },
-        ]
