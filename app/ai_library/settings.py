@@ -42,7 +42,7 @@ INSTALLED_APPS = [
     "rest_framework",  # DRF package
     "gutenberg",
     "bookworm",
-    "heits_library",
+    "ai_library",
 ]
 
 MIDDLEWARE = [
@@ -82,11 +82,11 @@ WSGI_APPLICATION = "app.wsgi.application"
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'heits_library',          # Database name
-        'USER': 'heits_user',              # Database username
-        'PASSWORD': 'heits_password',      # Database password
+        'NAME': 'ai_library',          # Database name
+        'USER': 'ai_user',              # Database username
+        'PASSWORD': 'ai_password',      # Database password
         'HOST': '127.0.0.1',           # Host (use container name if connecting from another container)
-        'PORT': '3308',                # Port
+        'PORT': '3309',                # Port
     }
 }
 

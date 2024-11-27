@@ -21,5 +21,5 @@ urlpatterns = [
     path("admin/", admin.site.urls),
     path("api/gutenberg/", include("gutenberg.urls")),
     path("api/bookworm/", include("bookworm.urls")),
-    path("api/heits_library/", include("heits_library.urls")),
+    path("api/ai_library/", include("ai_library.urls")),
 ]
