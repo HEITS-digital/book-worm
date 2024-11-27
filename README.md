@@ -1,4 +1,4 @@
-# Steps 
+# Steps
 
 # SETUP
 ## 1. Install python dependencies
@@ -36,15 +36,22 @@ Create App
 python manage.py startapp core
 ```
 
-Migrations 
+Migrations
 ```
 python manage.py makemigrations
 python manage.py migrate
 ```
 
-Start Server 
+Start Server
 ```
 python manage.py runserver
 ```
 
+Create REDIS container
+```
 docker run --name my-redis -p 6380:6379 -d redis/redis-stack:latest
+```
+Create mysql container
+```
+docker run --name ai-mysql-docker -e MYSQL_ROOT_PASSWORD=root_password -e MYSQL_DATABASE=ai_library -e MYSQL_USER=ai_user -e MYSQL_PASSWORD=ai_password -p 3309:3306 -d mysql:latest
+```
