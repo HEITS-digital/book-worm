@@ -1,4 +1,4 @@
-# Steps 
+# Steps
 
 # SETUP
 ## 1. Install python dependencies
@@ -29,7 +29,29 @@ Speak with either Giani Statie or Dan Costin about how to procure a OpenAI API k
 
 That key should be then stored in a new `.env` file in this folder under the name `OPENAI_API_KEY=`
 
-## (Outdated) Dowload llama-cpp 
-* https://huggingface.co/TheBloke/Llama-2-13B-chat-GGUF/blob/main/llama-2-13b-chat.Q5_K_M.gguf
-* https://huggingface.co/TheBloke/TinyLlama-1.1B-Chat-v1.0-GGUF/blob/main/tinyllama-1.1b-chat-v1.0.Q5_K_M.gguf
-* https://huggingface.co/TheBloke/firefly-llama2-7B-chat-GGUF/blob/main/firefly-llama2-7b-chat.Q5_K_M.gguf
+## Cheat Sheet
+
+Create App
+```
+python manage.py startapp core
+```
+
+Migrations
+```
+python manage.py makemigrations
+python manage.py migrate
+```
+
+Start Server
+```
+python manage.py runserver
+```
+
+Create REDIS container
+```
+docker run --name my-redis -p 6380:6379 -d redis/redis-stack:latest
+```
+Create mysql container
+```
+docker run --name ai-mysql-docker -e MYSQL_ROOT_PASSWORD=root_password -e MYSQL_DATABASE=ai_library -e MYSQL_USER=ai_user -e MYSQL_PASSWORD=ai_password -p 3309:3306 -d mysql:latest
+```
