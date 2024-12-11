@@ -2,6 +2,7 @@ import json
 from django.http import JsonResponse
 from django.middleware.csrf import get_token
 from .scripts.agent_pool import AgentPool
+from ai_library.services import get_articles
 
 # TODO: create agent pool
 agent_pool = AgentPool()
@@ -9,6 +10,7 @@ agent_pool = AgentPool()
 
 def ask_bookworm(request):
     if request.method == "POST":
+        articles = get_articles({"id": [1]})
         message = request.POST.get("message", None)
         history = request.POST.get("history", "[]")
         history = json.loads(history)
