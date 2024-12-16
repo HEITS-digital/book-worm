@@ -6,7 +6,6 @@ from langchain.agents import create_openai_tools_agent, AgentExecutor
 from langchain_core.messages.utils import messages_from_dict
 
 from .tools import (
-    GetGenresTool,
     SearchAuthorTool,
     SearchGenreTool,
     SearchBookOnBookwormTool,
@@ -17,9 +16,8 @@ from .vectordb import VectorDB
 
 class Agent:
     def __init__(self):
-        self.gutenberg_api = "http://127.0.0.1:8000/api/gutenberg"
         self.llm = ChatOpenAI(model="gpt-4o")
-        self.vector_db = VectorDB(gutenberg_api=self.gutenberg_api)
+        self.vector_db = VectorDB()
         self.tools = self._get_bookworm_tools()
         self.prompt = self._get_bookoworm_prompt()
         self.base_agent = create_openai_tools_agent(self.llm, self.tools, self.prompt)
@@ -44,10 +42,9 @@ class Agent:
 
     def _get_bookworm_tools(self):
         return [
-            GetGenresTool(),  # TODO: this uses a static file. Need to find a better way
-            SearchAuthorTool(metadata={"api_url": f"{self.gutenberg_api}/get-author-by-query/"}),
-            SearchGenreTool(metadata={"api_url": f"{self.gutenberg_api}/get-genre-by-query/"}),
-            SearchBookOnBookwormTool(metadata={"api_url": f"{self.gutenberg_api}/get-book-by-query/"}),
+            SearchAuthorTool(),
+            SearchGenreTool(),
+            SearchBookOnBookwormTool(),
             GetDetailsFromBook(metadata={"vector_db": self.vector_db}),
         ]
 

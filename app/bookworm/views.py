@@ -10,7 +10,6 @@ agent_pool = AgentPool()
 
 def ask_bookworm(request):
     if request.method == "POST":
-        articles = get_articles({"id": [1]})
         message = request.POST.get("message", None)
         history = request.POST.get("history", "[]")
         history = json.loads(history)

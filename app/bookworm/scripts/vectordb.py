@@ -1,16 +1,15 @@
 import os
-import json
-import requests
 
 from langchain_openai import OpenAIEmbeddings
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_community.vectorstores.redis import Redis
 from langchain_community.vectorstores import Chroma
 
+from ai_library.services import get_content_by_article_ids
+
 
 class VectorDB:
-    def __init__(self, gutenberg_api):
-        self.gutenberg_api = gutenberg_api
+    def __init__(self):
         self.encoder = OpenAIEmbeddings()
         self.redis_url = "redis://localhost:6380"
 
@@ -18,9 +17,7 @@ class VectorDB:
         self.redis_schema = os.path.join(current_path, "static/redis_schema.yaml")
 
     # TODO: replace book_name with book_id
-    def get_relevant_text(self, book_name, query):
-        book_id = self.get_book_id_by_name(book_name)
-
+    def get_relevant_text(self, book_id, query):
         try:
             vector_db = Redis.from_existing_index(
                 self.encoder,
@@ -48,15 +45,9 @@ class VectorDB:
         page_contents = [doc.page_content for doc in search_result]
         return page_contents
 
-    def get_book_id_by_name(self, book_name):
-        api_url = f"{self.gutenberg_api}/get-id-by-title/"
-        response = requests.get(api_url, {"title": book_name})
-        return response.json().get("id", -1)
-
     def get_book_contents_by_id(self, book_id):
-        api_url = f"{self.gutenberg_api}/get-contents-by-id/"
-        response = requests.get(api_url, {"book_id": book_id})
-        return response.text
+        response = get_content_by_article_ids(id=[book_id])
+        return response[0].text
 
     @staticmethod
     def split_documents(book_text, chunk_size):
