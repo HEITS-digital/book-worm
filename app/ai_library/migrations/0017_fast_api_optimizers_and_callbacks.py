@@ -11,9 +11,10 @@ def insert_data(apps, schema_editor):
         id=16,
         author='Jeremy Howard, Sylvain Gugger',
         title='Deep Learning for Coders with fastai and PyTorch: AI Applications Without a PhD',
+        chapter_name='Optimizers and Callbacks',
         source='https://course.fast.ai/Resources/book.html',
         source_type='website',
-        metadata=json.dumps({"chapter_name": "NLP Deep-Dive", "keywords": ["AI", "technology"], }),
+        metadata=json.dumps({"keywords": ["AI", "technology"], }),
         last_modified=datetime(2024, 12, 6, 1, 0, 0),
         created_date=datetime(2024, 12, 6, 1, 0, 0)
     )
