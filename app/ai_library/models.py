@@ -5,6 +5,7 @@ class Article(models.Model):
     id = models.AutoField(primary_key=True)
     author = models.CharField(max_length=255)
     title = models.CharField(max_length=255)
+    chapter_name = models.CharField(max_length=255)
     source = models.CharField(max_length=255)
     source_type = models.CharField(max_length=100)
     metadata = models.JSONField()

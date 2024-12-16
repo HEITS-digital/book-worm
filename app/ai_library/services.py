@@ -8,7 +8,7 @@ def get_articles(filter_items):
 
     for key, value in filter_items.items():
         if key in standard_fields:
-            filters &= Q(**{key: value})
+            filters &= Q(**{f"{key}__in": value})
         else:
             filters &= Q(**{f"metadata__{key}": value}) | Q(**{f"metadata__{key}__icontains": value})
 
