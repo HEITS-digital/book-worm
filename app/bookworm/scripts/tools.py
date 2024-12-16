@@ -18,8 +18,8 @@ class SearchGenreInput(BaseModel):
     book_genre: str = Field(description="should be a book genre to search for")
 
 
-class SearchBookInput(BaseModel):
-    book_name: str = Field(description="should be a book name to search for")
+class SearchBookTitle(BaseModel):
+    book_title: str = Field(description="should be a book title to search for")
 
 
 class GetDetailsInput(BaseModel):
@@ -67,20 +67,20 @@ class SearchGenreTool(BaseTool):
         raise NotImplementedError("Not implemented")
 
 
-class SearchBookOnBookwormTool(BaseTool):
-    name: str = "search-book-on-bookworm-tool"
-    description: str = "Look up books by the name of the book in the BookWorm library."
+class SearchBookTitleTool(BaseTool):
+    name: str = "search-book-title-tool"
+    description: str = "Look up books by title in the BookWorm library."
     return_direct: bool = False
-    args_schema: Type[BaseModel] = SearchBookInput
+    args_schema: Type[BaseModel] = SearchBookTitle
 
-    def _run(self, book_name: str, run_manager: Optional[CallbackManagerForToolRun] = None) -> List[dict]:
+    def _run(self, book_title: str, run_manager: Optional[CallbackManagerForToolRun] = None) -> List[dict]:
         # External variable return when tool runs
-        response = get_articles({"title": book_name})
+        response = get_articles({"title": book_title})
         return response
 
     async def _arun(
         self,
-        book_name: str,
+        book_title: str,
         run_manager: Optional[AsyncCallbackManagerForToolRun] = None,
     ) -> List[dict]:
         """Use the tool asynchronously."""

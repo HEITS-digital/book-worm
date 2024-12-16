@@ -8,7 +8,7 @@ from langchain_core.messages.utils import messages_from_dict
 from .tools import (
     SearchAuthorTool,
     SearchGenreTool,
-    SearchBookOnBookwormTool,
+    SearchBookTitleTool,
     GetDetailsFromBook,
 )
 from .vectordb import VectorDB
@@ -44,7 +44,7 @@ class Agent:
         return [
             SearchAuthorTool(),
             SearchGenreTool(),
-            SearchBookOnBookwormTool(),
+            SearchBookTitleTool(),
             GetDetailsFromBook(metadata={"vector_db": self.vector_db}),
         ]
 
