@@ -9,7 +9,7 @@ from .tools import (
     SearchAuthorTool,
     SearchGenreTool,
     SearchBookTitleTool,
-    GetDetailsFromBook,
+    GetBookDetailsByID,
 )
 from .vectordb import VectorDB
 
@@ -44,14 +44,14 @@ class Agent:
         return [
             SearchAuthorTool(),
             SearchGenreTool(),
-            SearchBookTitleTool(),
-            GetDetailsFromBook(metadata={"vector_db": self.vector_db}),
+            SearchBookTitleTool(metadata={"vector_db": self.vector_db}),
+            GetBookDetailsByID(metadata={"vector_db": self.vector_db}),
         ]
 
     def _get_bookoworm_prompt(self):
         prompt = hub.pull("hwchase17/openai-functions-agent")
         sys_message = SystemMessagePromptTemplate.from_template(
-            "You are a librarian in the BookWorm library. If a book is not in the library you can only offer a short description."
+            "You help people learn AI. You NEVER answer questions without providing a source from a article or book."
         )
         prompt.messages[0] = sys_message
         return prompt

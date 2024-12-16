@@ -23,8 +23,8 @@ class SearchBookTitle(BaseModel):
 
 
 class GetDetailsInput(BaseModel):
-    book_id: str = Field(description="the id of the book to get information for")
-    query: str = Field(description="what to search for inside the book")
+    book_id: str = Field(description="the book_id to get information for")
+    query: str = Field(description="a question to be answered using information from the book")
 
 
 class SearchAuthorTool(BaseTool):
@@ -75,8 +75,7 @@ class SearchBookTitleTool(BaseTool):
 
     def _run(self, book_title: str, run_manager: Optional[CallbackManagerForToolRun] = None) -> List[dict]:
         # External variable return when tool runs
-        response = get_articles({"title": book_title})
-        return response
+        return self.metadata["vector_db"].get_most_similar_chapter_id(book_title)
 
     async def _arun(
         self,
@@ -87,9 +86,9 @@ class SearchBookTitleTool(BaseTool):
         raise NotImplementedError("Not implemented")
 
 
-class GetDetailsFromBook(BaseTool):
-    name: str = "get-details-from-book-tool"
-    description: str = "Look up for information inside a book from the BookWorm library based on book_id."
+class GetBookDetailsByID(BaseTool):
+    name: str = "get-book-details-by-id-tool"
+    description: str = "Look up for information given a book_id."
     return_direct: bool = False
     args_schema: Type[BaseModel] = GetDetailsInput
 

@@ -4,6 +4,11 @@ from django.http import JsonResponse
 from .models import Article, Content
 
 
+def get_all_chapter_names():
+    chapter_names = Article.objects.values("id", "chapter_name")
+    return JsonResponse(list(chapter_names), safe=False)
+
+
 def get_articles(request):
     filters = Q()
     standard_fields = ["id", "author", "title", "source", "source_type"]
@@ -12,20 +17,17 @@ def get_articles(request):
         if key in standard_fields:
             filters &= Q(**{key: value})
         else:
-            filters &= (
-                Q(**{f"metadata__{key}": value}) |
-                Q(**{f"metadata__{key}__icontains": value})
-            )
+            filters &= Q(**{f"metadata__{key}": value}) | Q(**{f"metadata__{key}__icontains": value})
 
     articles = Article.objects.filter(filters).values(
-        'id', 'author', 'title', 'source', 'source_type', 'metadata', 'last_modified', 'created_date'
+        "id", "author", "title", "source", "source_type", "metadata", "last_modified", "created_date"
     )
 
     return JsonResponse(list(articles), safe=False)
 
 
 def get_content_by_article_ids(request):
-    ids_param = request.GET.get('article_ids')
+    ids_param = request.GET.get("article_ids")
 
     if not ids_param:
         return JsonResponse({"error": "No article IDs provided"}, status=400)
@@ -37,9 +39,10 @@ def get_content_by_article_ids(request):
 
         article_ids = list(map(int, article_ids))
     except (json.JSONDecodeError, ValueError):
-        return JsonResponse({"error": "Invalid format for article IDs. Must be a JSON-like list of integers."},
-                            status=400)
+        return JsonResponse(
+            {"error": "Invalid format for article IDs. Must be a JSON-like list of integers."}, status=400
+        )
 
-    contents = Content.objects.filter(article_id__in=article_ids).values('id', 'article_id', 'text')
+    contents = Content.objects.filter(article_id__in=article_ids).values("id", "article_id", "text")
 
     return JsonResponse(list(contents), safe=False)

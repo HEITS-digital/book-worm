@@ -2,6 +2,11 @@ from django.db.models import Q
 from .models import Article, Content
 
 
+def get_all_chapter_names():
+    chapter_names = Article.objects.values("id", "chapter_name")
+    return list(chapter_names)
+
+
 def get_articles(filter_items):
     filters = Q()
     standard_fields = ["id", "author", "title", "source", "source_type"]
