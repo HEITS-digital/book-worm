@@ -6,20 +6,18 @@ from langchain.agents import create_openai_tools_agent, AgentExecutor
 from langchain_core.messages.utils import messages_from_dict
 
 from .tools import (
-    GetGenresTool,
     SearchAuthorTool,
     SearchGenreTool,
-    SearchBookOnBookwormTool,
-    GetDetailsFromBook,
+    SearchBookTitleTool,
+    GetBookDetailsByID,
 )
 from .vectordb import VectorDB
 
 
 class Agent:
     def __init__(self):
-        self.gutenberg_api = "http://127.0.0.1:8000/api/gutenberg"
         self.llm = ChatOpenAI(model="gpt-4o")
-        self.vector_db = VectorDB(gutenberg_api=self.gutenberg_api)
+        self.vector_db = VectorDB()
         self.tools = self._get_bookworm_tools()
         self.prompt = self._get_bookoworm_prompt()
         self.base_agent = create_openai_tools_agent(self.llm, self.tools, self.prompt)
@@ -44,17 +42,16 @@ class Agent:
 
     def _get_bookworm_tools(self):
         return [
-            GetGenresTool(),  # TODO: this uses a static file. Need to find a better way
-            SearchAuthorTool(metadata={"api_url": f"{self.gutenberg_api}/get-author-by-query/"}),
-            SearchGenreTool(metadata={"api_url": f"{self.gutenberg_api}/get-genre-by-query/"}),
-            SearchBookOnBookwormTool(metadata={"api_url": f"{self.gutenberg_api}/get-book-by-query/"}),
-            GetDetailsFromBook(metadata={"vector_db": self.vector_db}),
+            SearchAuthorTool(),
+            SearchGenreTool(),
+            SearchBookTitleTool(metadata={"vector_db": self.vector_db}),
+            GetBookDetailsByID(metadata={"vector_db": self.vector_db}),
         ]
 
     def _get_bookoworm_prompt(self):
         prompt = hub.pull("hwchase17/openai-functions-agent")
         sys_message = SystemMessagePromptTemplate.from_template(
-            "You are a librarian in the BookWorm library. If a book is not in the library you can only offer a short description."
+            "You help people learn AI. You NEVER answer questions without providing a source from a article or book."
         )
         prompt.messages[0] = sys_message
         return prompt
