@@ -3,7 +3,7 @@ import os
 from langchain_openai import OpenAIEmbeddings
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_community.vectorstores.redis import Redis
-from langchain_community.vectorstores import Chroma
+from langchain_community.vectorstores import Chroma, InMemoryVectorStore
 
 from ai_library.services import get_all_chapter_names, get_content_by_article_ids
 
@@ -57,8 +57,9 @@ class VectorDB:
         search_result = vector_db.similarity_search(query)
 
         documents = self.split_documents(search_result, 1024)
-        small_chunks_vector_db = Chroma.from_documents(documents, self.encoder)
+        small_chunks_vector_db = InMemoryVectorStore.from_documents(documents, self.encoder)
         search_result = small_chunks_vector_db.similarity_search(query)
+        del small_chunks_vector_db
 
         page_contents = [doc.page_content for doc in search_result]
         return page_contents
