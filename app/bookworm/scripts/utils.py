@@ -1,5 +1,6 @@
 import uuid
 
+from langchain.schema import Document
 from langchain_postgres import PGVector
 from langchain_openai import OpenAIEmbeddings
 from langchain.retrievers.multi_vector import MultiVectorRetriever
@@ -50,6 +51,24 @@ def update_vectorstore(retriever, book_text, chapter_name):
 
     retriever.vectorstore.add_documents(all_sub_docs)
     retriever.docstore.mset(list(zip(doc_ids, documents, chapter_names)))
+
+
+def update_vectorstore_with_chapters(retriever, chapters):
+    id_key = "doc_id"
+    child_text_splitter = RecursiveCharacterTextSplitter(chunk_size=400)
+    doc_id = str(uuid.uuid4())
+    all_sub_docs = []
+
+    for i, chapter in enumerate(chapters):
+        document = Document(page_content=chapter, metadata={id_key: doc_id, "chapter_index": i})
+
+        sub_docs = child_text_splitter.split_documents([document])
+        for sub_doc in sub_docs:
+            sub_doc.metadata[id_key] = doc_id
+        all_sub_docs.extend(sub_docs)
+
+    retriever.vectorstore.add_documents(all_sub_docs)
+    retriever.docstore.mset(list(zip([str(doc_id)], ["chapters"], ["chapter_names"])))
 
 
 def split_documents(book_text, chunk_size):

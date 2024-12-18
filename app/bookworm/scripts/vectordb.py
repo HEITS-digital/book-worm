@@ -1,37 +1,27 @@
-import os
-
-from langchain_openai import OpenAIEmbeddings
-from langchain_community.vectorstores import Chroma
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 
 from ai_library.services import get_all_chapter_names, get_content_by_article_ids, get_articles
-from bookworm.scripts.utils import get_retriever, update_vectorstore
+from bookworm.scripts.utils import get_retriever, update_vectorstore, update_vectorstore_with_chapters
 
 
 class VectorDB:
     def __init__(self):
-        self.encoder = OpenAIEmbeddings()
-        self.redis_url = "redis://localhost:6380"
-
-        current_path = os.path.dirname(__file__)
-        self.redis_schema = os.path.join(current_path, "static/redis_schema.yaml")
-
         self.chapter_names = []
-        self.chapters_names_chroma = None
-        self.init_titles_chroma()
+        self.init_titles()
 
     # TODO: should do this once every X days and share it between instances
-    def init_titles_chroma(self):
+    def init_titles(self):
         result = get_all_chapter_names()
         self.chapter_names = [r["chapter_name"] for r in result]
 
-        chunk_size = max([len(x) for x in self.chapter_names])
-        documents = self.create_documents_from_str_list(self.chapter_names, chunk_size)
-
-        self.chapters_names_chroma = Chroma.from_documents(documents, self.encoder)
+        # retriever = get_retriever("chapters")
+        # update_vectorstore_with_chapters(retriever, self.chapter_names)
 
     def get_most_similar_chapter_id(self, book_title):
-        closest_chapter = self.chapters_names_chroma.similarity_search(book_title, k=1)[0].page_content
+        retriever = get_retriever("chapters")
+        search_result = retriever.vectorstore.similarity_search(book_title)
+        closest_chapter = search_result[0].page_content
+
         return {"book_id": self.chapter_names.index(closest_chapter) + 1}
 
     def get_relevant_text(self, book_id, query):
