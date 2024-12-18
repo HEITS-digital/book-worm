@@ -58,6 +58,7 @@ langchain==0.3.7
 langchain-community==0.3.7
 langchain-core==0.3.18
 langchain-openai==0.2.8
+langchain_postgres==0.0.12
 langchain-text-splitters==0.3.2
 langsmith==0.1.143
 markdown-it-py==3.0.0
