@@ -55,3 +55,7 @@ Create mysql container
 ```
 docker run --name ai-mysql-docker -e MYSQL_ROOT_PASSWORD=root_password -e MYSQL_DATABASE=ai_library -e MYSQL_USER=ai_user -e MYSQL_PASSWORD=ai_password -p 3309:3306 -d mysql:latest
 ```
+Create postgres container
+```
+docker-compose -f docker-compose.db.yml up -d
+```

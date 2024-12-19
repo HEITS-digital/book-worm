@@ -18,7 +18,7 @@ def get_articles(filter_items):
             filters &= Q(**{f"metadata__{key}": value}) | Q(**{f"metadata__{key}__icontains": value})
 
     articles = Article.objects.filter(filters).values(
-        "id", "author", "title", "source", "source_type", "metadata", "last_modified", "created_date"
+        "id", "author", "title", "chapter_name", "source", "source_type", "metadata", "last_modified", "created_date"
     )
 
     return list(articles)
