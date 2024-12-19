@@ -31,8 +31,9 @@ class VectorDB:
         # update_vectorstore(retriever, book_text, chapter_name)
 
         search_result = retriever.vectorstore.similarity_search(query)
+        chunk_result = retriever.invoke(query)
 
-        return search_result
+        return chunk_result
 
     @staticmethod
     def get_book_contents_by_id(book_id):
