@@ -6,9 +6,6 @@ from langchain.agents import create_openai_tools_agent, AgentExecutor
 from langchain_core.messages.utils import messages_from_dict
 
 from .tools import (
-    SearchAuthorTool,
-    SearchGenreTool,
-    SearchBookTitleTool,
     GetBookDetailsByID,
 )
 from .vectordb import VectorDB
@@ -28,7 +25,7 @@ class Agent:
         else:
             memory = ConversationBufferMemory(memory_key="chat_history", return_messages=True)
 
-        self.agent = AgentExecutor(
+        agent = AgentExecutor(
             agent=self.base_agent,
             tools=self.tools,
             verbose=True,
@@ -37,14 +34,11 @@ class Agent:
             max_iterations=100,
         )
 
-        response = self.agent.invoke({"input": question})
+        response = agent.invoke({"input": question})
         return response
 
     def _get_bookworm_tools(self):
         return [
-            SearchAuthorTool(),
-            SearchGenreTool(),
-            SearchBookTitleTool(metadata={"vector_db": self.vector_db}),
             GetBookDetailsByID(metadata={"vector_db": self.vector_db}),
         ]
 
